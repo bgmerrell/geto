@@ -11,7 +11,7 @@ import (
 	"net/rpc/jsonrpc"
 )
 
-type RPCFunc struct {}
+type RPCFunc struct{}
 
 func (*RPCFunc) Echo(arg *string, result *string) error {
 	log.Print("Arg passed: " + *arg)
@@ -27,7 +27,7 @@ func Serve() {
 		log.Fatal("Failed to start server: %s\n", err.Error())
 	}
 	log.Print("Listening on: ", l.Addr())
-	rpc.Register(new (RPCFunc))
+	rpc.Register(new(RPCFunc))
 	for {
 		log.Printf("Waiting for connection...")
 		conn, err := l.Accept()

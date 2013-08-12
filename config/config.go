@@ -6,8 +6,8 @@ package config
 
 import (
 	"fmt"
-	"log"
 	"github.com/robfig/config"
+	"log"
 )
 
 func Config() bool {
@@ -16,8 +16,8 @@ func Config() bool {
 	c, err := config.ReadDefault("./geto.ini")
 	if err != nil {
 		log.Print("Failed to parse config file: ", err.Error())
-		return false;
+		return false
 	}
 	fmt.Println(c.String("hosts", "localhost"))
-	return true;
+	return true
 }
