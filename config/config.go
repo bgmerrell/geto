@@ -13,11 +13,18 @@ import (
 func Config() bool {
 	log.Print("Parsing configuration file...")
 	/* TODO: look for system config first */
-	c, err := config.ReadDefault("./geto.ini")
+	/* TODO: How do I read a file with a relative path from this file? */
+	c, err := config.ReadDefault("config/geto.ini")
 	if err != nil {
-		log.Print("Failed to parse config file: ", err.Error())
+		log.Print("Failed to parse config file:", err.Error())
 		return false
 	}
-	fmt.Println(c.String("hosts", "localhost"))
+	/* TODO: replace test code with implementation */
+	host, err := c.String("hosts", "localhost")
+	if err != nil {
+		log.Print("Failed to parse config file:", err.Error())
+		return false
+	}
+	fmt.Println("Host:", host)
 	return true
 }
