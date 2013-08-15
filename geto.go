@@ -5,12 +5,23 @@
 package main
 
 import (
+	"flag"
 	"github.com/bgmerrell/geto/config"
 	"github.com/bgmerrell/geto/server"
 )
 
+/* Variables set by command line parsing */
+var configPath string
+
+func parseCommandLine() {
+	/* XXX: How to make this portable? */
+	flag.StringVar(&configPath, "config-path", "/etc/geto.ini", "Configuration file path")
+	flag.Parse()
+}
+
 func main() {
-	if !config.Config() {
+	parseCommandLine()
+	if !config.Config(configPath) {
 		return
 	}
 	server.Serve()

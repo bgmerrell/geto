@@ -8,10 +8,15 @@ import (
 	"fmt"
 	"github.com/robfig/config"
 	"log"
+	"os"
 )
 
-func Config() bool {
-	log.Print("Parsing configuration file...")
+func Config(configPath string) bool {
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		log.Print("No configuration file: ", configPath)
+		return false
+	}
+	log.Print("Parsing configuration file: ", configPath)
 	/* TODO: look for system config first */
 	/* TODO: How do I read a file with a relative path from this file? */
 	c, err := config.ReadDefault("config/geto.ini")
