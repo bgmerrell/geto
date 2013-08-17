@@ -8,6 +8,7 @@ import (
 	"flag"
 	"github.com/bgmerrell/geto/config"
 	"github.com/bgmerrell/geto/server"
+	"os"
 )
 
 /* Variables set by command line parsing */
@@ -24,5 +25,9 @@ func main() {
 	if !config.Config(configPath) {
 		return
 	}
-	server.Serve()
+	if server.Serve() {
+		os.Exit(0)
+	} else {
+		os.Exit(1)
+	}
 }

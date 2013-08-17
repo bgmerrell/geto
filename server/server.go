@@ -11,30 +11,31 @@ import (
 	"net/rpc/jsonrpc"
 )
 
-type RPCFunc struct{}
+type GetoRPC struct{}
 
-func (*RPCFunc) Echo(arg *string, result *string) error {
-	log.Print("Arg passed: " + *arg)
-	*result = ">" + *arg + "<"
+func (*GetoRPC) Echo(incoming *string, outgoing *string) error {
+	log.Print("Echoing: ", *incoming)
+	*outgoing = *incoming
 	return nil
 }
 
-func Serve() {
+func Serve() bool {
 	log.Print("Starting server...")
-	l, err := net.Listen("tcp", ":1234")
-	defer l.Close()
+	listener, err := net.Listen("tcp", ":11102")
 	if err != nil {
 		log.Fatal("Failed to start server: %s\n", err.Error())
+		return false
 	}
-	log.Print("Listening on: ", l.Addr())
-	rpc.Register(new(RPCFunc))
+	defer listener.Close()
+	log.Print("Listening on: ", listener.Addr())
+	rpc.Register(new(GetoRPC))
 	for {
 		log.Printf("Waiting for connection...")
-		conn, err := l.Accept()
-		if err != nil {
+		if conn, err := listener.Accept(); err == nil {
+			log.Printf("Connection started: %v", conn.RemoteAddr())
+			go jsonrpc.ServeConn(conn)
+		} else {
 			log.Fatal("Failed connection acceptance: ", err.Error())
 		}
-		log.Printf("Connection started: %v", conn.RemoteAddr())
-		go jsonrpc.ServeConn(conn)
 	}
 }
