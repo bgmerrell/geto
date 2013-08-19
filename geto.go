@@ -22,8 +22,8 @@ func parseCommandLine() {
 
 func main() {
 	parseCommandLine()
-	if !config.Config(configPath) {
-		return
+	if c := config.ParseConfig(configPath); !c.IsParsed {
+		os.Exit(1)
 	}
 	if server.Serve() {
 		os.Exit(0)

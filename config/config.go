@@ -11,10 +11,22 @@ import (
 	"os"
 )
 
-func Config(configPath string) bool {
+var conf Config
+
+func init() {
+	conf = Config{}
+}
+
+type Config struct {
+	IsParsed bool
+	FilePath string
+	Hosts    []string
+}
+
+func ParseConfig(configPath string) Config {
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		log.Print("No configuration file: ", configPath)
-		return false
+		return conf
 	}
 	log.Print("Parsing configuration file: ", configPath)
 	/* TODO: look for system config first */
@@ -22,14 +34,17 @@ func Config(configPath string) bool {
 	c, err := config.ReadDefault("config/geto.ini")
 	if err != nil {
 		log.Print("Failed to parse config file:", err.Error())
-		return false
+		return conf
 	}
 	/* TODO: replace test code with implementation */
 	host, err := c.String("hosts", "localhost")
 	if err != nil {
 		log.Print("Failed to parse config file:", err.Error())
-		return false
+		return conf
 	}
-	fmt.Println("Host:", host)
-	return true
+	conf.IsParsed = true
+	conf.FilePath = configPath
+	conf.Hosts = append(conf.Hosts, host)
+	fmt.Println("Host:", conf.Hosts[0])
+	return conf
 }
