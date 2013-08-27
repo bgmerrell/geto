@@ -22,7 +22,8 @@ func parseCommandLine() {
 
 func main() {
 	parseCommandLine()
-	if c := config.ParseConfig(configPath); !c.IsParsed {
+	/* TODO: use the parsed config file */
+	if _, err := config.ParseConfig(configPath); err != nil {
 		os.Exit(1)
 	}
 	if server.Serve() {

@@ -18,33 +18,29 @@ func init() {
 }
 
 type Config struct {
-	IsParsed bool
 	FilePath string
 	Hosts    []string
 }
 
-func ParseConfig(configPath string) Config {
+func ParseConfig(configPath string) (Config, error) {
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		log.Print("No configuration file: ", configPath)
-		return conf
+		return conf, err
 	}
 	log.Print("Parsing configuration file: ", configPath)
-	/* TODO: look for system config first */
-	/* TODO: How do I read a file with a relative path from this file? */
 	c, err := config.ReadDefault(configPath)
 	if err != nil {
 		log.Print("Failed to parse config file: ", err.Error())
-		return conf
+		return conf, err
 	}
 	/* TODO: replace test code with implementation */
 	host, err := c.String("hosts", "localhost")
 	if err != nil {
 		log.Print("Failed to parse config file: ", err.Error())
-		return conf
+		return conf, err
 	}
-	conf.IsParsed = true
 	conf.FilePath = configPath
 	conf.Hosts = append(conf.Hosts, host)
 	fmt.Println("Host:", conf.Hosts[0])
-	return conf
+	return conf, nil
 }
