@@ -18,8 +18,8 @@ func init() {
 }
 
 type Host struct {
-	name	string
-	addr	string
+	name string
+	addr string
 }
 
 type Config struct {
