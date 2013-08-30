@@ -2,6 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/*
+Geto's main package
+
+Parse command line arguments and let the fun begin!
+*/
 package main
 
 import (
@@ -15,14 +20,13 @@ import (
 var configPath string
 
 func parseCommandLine() {
-	/* XXX: How to make this portable? */
-	flag.StringVar(&configPath, "config-path", "/etc/geto.ini", "Configuration file path")
+	/* TODO: look for a system-wide config file in a portable manner */
+	flag.StringVar(&configPath, "config-path", "geto.ini", "Configuration file path")
 	flag.Parse()
 }
 
 func main() {
 	parseCommandLine()
-	/* TODO: use the parsed config file */
 	if _, err := config.ParseConfig(configPath); err != nil {
 		os.Exit(1)
 	}

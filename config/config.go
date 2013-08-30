@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/*
+Configuration file management
+*/
 package config
 
 import (
@@ -12,6 +15,7 @@ import (
 )
 
 var conf Config
+var isParsed bool = false
 
 func init() {
 	conf = Config{}
@@ -27,6 +31,8 @@ type Config struct {
 	Hosts    []Host
 }
 
+// Parse the config file
+// The configPath parameter is the path to the config file on the filesystem
 func ParseConfig(configPath string) (Config, error) {
 	var err error
 
@@ -66,5 +72,15 @@ func ParseConfig(configPath string) (Config, error) {
 	}
 
 	conf.FilePath = configPath
+	isParsed = true
 	return conf, nil
+}
+
+// Return the Config object.
+// ParseConfig should probably be called before this function
+func GetConfig() Config {
+	if !isParsed {
+		log.Println("Warning: unparsed configuration")
+	}
+	return conf
 }
