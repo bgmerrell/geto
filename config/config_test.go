@@ -13,13 +13,13 @@ import (
 var err error
 
 func TestParseEmptyConfig(t *testing.T) {
-	if _, err = ParseConfig("../test-data/config-empty.ini"); err == nil {
+	if _, err = ParseConfig("../test/data/config-empty.ini"); err == nil {
 		t.Errorf("Parsing an empty config should fail")
 	}
 }
 
 func TestParseConfigWithoutHosts(t *testing.T) {
-	if _, err = ParseConfig("../test-data/config-no-hosts.ini"); err == nil {
+	if _, err = ParseConfig("../test/data/config-no-hosts.ini"); err == nil {
 		t.Errorf("Parsing a config with no hosts should fail")
 	}
 }
@@ -31,11 +31,11 @@ func TestParseMissingConfig(t *testing.T) {
 }
 
 func TestParseConfigPath(t *testing.T) {
-	if conf, err = ParseConfig("../test-data/geto.ini"); err != nil {
+	if conf, err = ParseConfig("../test/data/geto.ini"); err != nil {
 		t.Fatalf("Parse of good config should pass.")
 	}
 
-	expected := "../test-data/geto.ini"
+	expected := "../test/data/geto.ini"
 	actual := conf.FilePath
 	if expected != actual {
 		t.Errorf("Config file path (%s) does not match expected (%s)",

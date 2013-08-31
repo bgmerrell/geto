@@ -28,6 +28,15 @@ func (*GetoRPC) Echo(incoming *string, outgoing *string) error {
 	return nil
 }
 
+// Ping hosts
+/*
+func (*GetoRPC) Echo(incoming *string, outgoing *string) error {
+	log.Print("Echoing: ", *incoming)
+	*outgoing = *incoming
+	return nil
+}
+*/
+
 // Start the JSON RPC server
 func Serve() bool {
 
