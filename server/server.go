@@ -28,9 +28,9 @@ func (*GetoRPC) Echo(incoming *string, outgoing *string) error {
 	return nil
 }
 
-// Ping hosts
+// Attempt to connect to each host via SSH
 /*
-func (*GetoRPC) Echo(incoming *string, outgoing *string) error {
+func (*GetoRPC) TestHostConnection(incoming *string, outgoing *string) error {
 	log.Print("Echoing: ", *incoming)
 	*outgoing = *incoming
 	return nil
