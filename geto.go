@@ -11,7 +11,7 @@ package main
 
 import (
 	"flag"
-	"github.com/bgmerrell/geto/config"
+	"github.com/bgmerrell/geto/lib/config"
 	"github.com/bgmerrell/geto/server"
 	"os"
 )
