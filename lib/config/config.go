@@ -28,6 +28,7 @@ type Host struct {
 
 type Config struct {
 	FilePath string
+	PrivKeyPath string
 	Hosts    []Host
 }
 
@@ -49,23 +50,31 @@ func ParseConfig(configPath string) (Config, error) {
 		return conf, err
 	}
 
+	var privKeyPath string
+	if privKeyPath, err = c.String("geto", "privkey_path"); err == nil {
+		conf.PrivKeyPath = privKeyPath
+	} else {
+		log.Print("Failed to parse \"geto\" section: ", err.Error())
+		return conf, err
+	}
+
 	var opts []string
 	if opts, err = c.Options("hosts"); err != nil {
-		log.Print("Failed to parse hosts section: ", err.Error())
+		log.Print("Failed to parse \"hosts\" section: ", err.Error())
 		return conf, err
 	}
 
 	const N_MIN_REQUIRED_HOSTS = 1
 	if len(opts) < N_MIN_REQUIRED_HOSTS {
 		err = errors.New("Config must have at least one host")
-		log.Print("Failed to parse hosts section: ", err.Error())
+		log.Print("Failed to parse \"hosts\" section: ", err.Error())
 		return conf, err
 	}
 
 	for _, hostname := range opts {
 		var addr string
 		if addr, err = c.String("hosts", hostname); err != nil {
-			log.Print("Failed to parse hosts section: ", err.Error())
+			log.Print("Failed to parse \"hosts\" section: ", err.Error())
 			return conf, err
 		}
 		conf.Hosts = append(conf.Hosts, Host{hostname, addr})

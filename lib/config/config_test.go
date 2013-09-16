@@ -45,6 +45,17 @@ func TestParseConfigPath(t *testing.T) {
 	}
 }
 
+
+func TestParsePrivKeyPath(t *testing.T) {
+	expected := "/Users/bean/.ssh/y"
+	actual := conf.PrivKeyPath
+	if expected != actual {
+		t.Errorf("Private key file path (%s) does not match expected (%s)",
+			actual, expected)
+	}
+}
+
+
 func TestParseConfigHosts(t *testing.T) {
 	fmt.Println("%v", conf.Hosts)
 
