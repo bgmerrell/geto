@@ -12,7 +12,6 @@ calls are in the same place.
 package ssh
 
 import (
-	"bytes"
 	"code.google.com/p/go.crypto/ssh"
 	"crypto"
 	"crypto/dsa"
@@ -20,7 +19,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	_ "crypto/sha1"
@@ -73,8 +71,12 @@ func (k *keychain) loadPEM(file string) error {
 	return nil
 }
 
-func TestDial(privKeyPath string) (ok bool) {
-	var err error
+type clientPassword string
+func (p clientPassword) Password(user string) (string, error) {
+    return string(p), nil
+}
+
+func TestDial(addr string, username string, password string, privKeyPath string) (err error) {
 
 	// An SSH client is represented with a ClientConn. Currently only
 	// the "password" authentication method is supported.
@@ -84,31 +86,29 @@ func TestDial(privKeyPath string) (ok bool) {
 	var clientKeychain *keychain = new(keychain)
 	clientKeychain.loadPEM(privKeyPath)
 	config := &ssh.ClientConfig{
-		User: "bean",  /* FIXME: Do not hard-code user name */
+		User: username,
 		Auth: []ssh.ClientAuth{
 			ssh.ClientAuthKeyring(clientKeychain),
+			ssh.ClientAuthPassword(clientPassword(password)),
 		},
 	}
-	client, err := ssh.Dial("tcp", "192.168.1.147:22", config)  /* FIXME: Do not hard-code URI */
+	client, err := ssh.Dial("tcp", addr + ":22", config)  /* TODO: add port to conf file */
 	if err != nil {
-		panic("Failed to dial: " + err.Error())
+		return err
 	}
 
 	// Each ClientConn can support multiple interactive sessions,
 	// represented by a Session.
 	session, err := client.NewSession()
 	if err != nil {
-		panic("Failed to create session: " + err.Error())
+		return err
 	}
 	defer session.Close()
 
 	// Once a Session is created, you can execute a single command on
 	// the remote side using the Run method.
-	var b bytes.Buffer
-	session.Stdout = &b
-	if err := session.Run("/usr/bin/whoami"); err != nil {
-		panic("Failed to run: " + err.Error())
+	if err := session.Run("true"); err != nil {
+		return err
 	}
-	fmt.Println(b.String())
-	return true
+	return nil
 }

@@ -90,15 +90,15 @@ func TestParseConfigHosts(t *testing.T) {
 	}
 
 	for _, host := range conf.Hosts {
-		fmt.Printf("%s: %s\n", host.name, host.addr)
+		fmt.Printf("%s: %s\n", host.Name, host.Addr)
 		var expectedHostAddr string
 		var ok bool
-		if expectedHostAddr, ok = expected[host.name]; !ok {
-			t.Errorf("Unexpected host name: %s", host.name)
+		if expectedHostAddr, ok = expected[host.Name]; !ok {
+			t.Errorf("Unexpected host name: %s", host.Name)
 		}
-		if expectedHostAddr != host.addr {
+		if expectedHostAddr != host.Addr {
 			t.Errorf("Expected host addr \"%s\" for host name \"%s\", got \"%s\"",
-				expectedHostAddr, host.name, host.addr)
+				expectedHostAddr, host.Name, host.Addr)
 		}
 	}
 }

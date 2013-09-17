@@ -22,11 +22,11 @@ func init() {
 }
 
 type Host struct {
-	name string
-	addr string
-	username string
-	password string
-	validPassword bool
+	Name string
+	Addr string
+	Username string
+	Password string
+	ValidPassword bool
 }
 
 type Config struct {

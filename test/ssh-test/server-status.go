@@ -7,6 +7,7 @@ package main
 import (
 	"github.com/bgmerrell/geto/lib/ssh"
 	"flag"
+	"fmt"
 	"github.com/bgmerrell/geto/lib/config"
 	"os"
 )
@@ -28,7 +29,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	if ok := ssh.TestDial(conf.PrivKeyPath); !ok {
-		os.Exit(1)
+	fmt.Println("Testing SSH connectivity on port 22...")  /* TODO: add port to conf file */
+	for _, host := range conf.Hosts {
+		fmt.Printf("%s@%s : ", host.Username, host.Addr, )
+		if err := ssh.TestDial(host.Addr, host.Username, host.Password, conf.PrivKeyPath); err == nil {
+			fmt.Printf("PASS\n")
+		} else {
+			fmt.Printf("FAIL (%s)\n", err.Error())
+		}
 	}
 }
