@@ -26,8 +26,6 @@ import (
 	_ "crypto/sha1"
 )
 
-var _privKeyPath string = ""
-
 // keychain implements the ClientKeyring interface
 type keychain struct {
 	keys []interface{}
@@ -76,7 +74,6 @@ func (k *keychain) loadPEM(file string) error {
 }
 
 func TestDial(privKeyPath string) (ok bool) {
-	_privKeyPath = privKeyPath
 	var err error
 
 	// An SSH client is represented with a ClientConn. Currently only
@@ -85,14 +82,14 @@ func TestDial(privKeyPath string) (ok bool) {
 	// To authenticate with the remote server you must pass at least one
 	// implementation of ClientAuth via the Auth field in ClientConfig.
 	var clientKeychain *keychain = new(keychain)
-	clientKeychain.loadPEM(_privKeyPath)
+	clientKeychain.loadPEM(privKeyPath)
 	config := &ssh.ClientConfig{
 		User: "bean",  /* FIXME: Do not hard-code user name */
 		Auth: []ssh.ClientAuth{
 			ssh.ClientAuthKeyring(clientKeychain),
 		},
 	}
-	client, err := ssh.Dial("tcp", "10.50.26.147:22", config)  /* FIXME: Do not hard-code URI */
+	client, err := ssh.Dial("tcp", "192.168.1.147:22", config)  /* FIXME: Do not hard-code URI */
 	if err != nil {
 		panic("Failed to dial: " + err.Error())
 	}
