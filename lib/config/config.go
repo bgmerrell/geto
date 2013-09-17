@@ -9,9 +9,11 @@ package config
 
 import (
 	"errors"
+	"github.com/bgmerrell/geto/lib/ssh"
 	"github.com/robfig/config"
 	"log"
 	"os"
+	"strconv"
 )
 
 var conf Config
@@ -27,6 +29,7 @@ type Host struct {
 	Username string
 	Password string
 	ValidPassword bool
+	PortNum uint16
 }
 
 type Config struct {
@@ -41,6 +44,7 @@ func ParseConfig(configPath string) (Config, error) {
 	conf = Config{}  /* Zero out the package-scope conf */
 	var err error
 	var hasPrivKey bool
+	var portNum int
 
 	if _, err = os.Stat(configPath); os.IsNotExist(err) {
 		log.Print("No configuration file: ", configPath)
@@ -99,9 +103,18 @@ func ParseConfig(configPath string) (Config, error) {
 				return conf, err
 			}
 		}
+		if portNum, err = c.Int(hostname, "port"); err == nil {
+			/* Max of 2^16 port numbers */
+			if portNum >> 16 != 0 {
+				err = errors.New("Invalid port number: " + strconv.FormatUint(uint64(portNum), 10))
+				return conf, err
+			}
+		} else {
+ 			portNum = ssh.DEFAULT_SSH_PORT
+		}
 		conf.Hosts = append(
 			conf.Hosts,
-			Host{hostname, addr, username, password, validPassword})
+			Host{hostname, addr, username, password, validPassword, uint16(portNum)})
 	}
 
 	conf.FilePath = configPath

@@ -21,8 +21,11 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
+	"strconv"
 	_ "crypto/sha1"
 )
+
+const DEFAULT_SSH_PORT = 22
 
 // keychain implements the ClientKeyring interface
 type keychain struct {
@@ -76,7 +79,7 @@ func (p clientPassword) Password(user string) (string, error) {
     return string(p), nil
 }
 
-func TestDial(addr string, username string, password string, privKeyPath string) (err error) {
+func TestDial(addr string, username string, password string, privKeyPath string, portNum uint16) (err error) {
 
 	// An SSH client is represented with a ClientConn. Currently only
 	// the "password" authentication method is supported.
@@ -92,7 +95,10 @@ func TestDial(addr string, username string, password string, privKeyPath string)
 			ssh.ClientAuthPassword(clientPassword(password)),
 		},
 	}
-	client, err := ssh.Dial("tcp", addr + ":22", config)  /* TODO: add port to conf file */
+	client, err := ssh.Dial(
+		"tcp",
+		addr + ":" + strconv.FormatUint(uint64(portNum), 10),
+		config)
 	if err != nil {
 		return err
 	}

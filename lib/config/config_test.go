@@ -6,6 +6,7 @@ package config
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 )
 
@@ -33,6 +34,16 @@ func TestParseConfigWithMissingPassword(t *testing.T) {
 	}
 	if err.Error() != "option not found: password" {
 		t.Errorf("Expected to fail for missing password")
+	}
+}
+
+func TestParseConfigWithBadPort(t *testing.T) {
+	if _, err = ParseConfig("../../test/data/config-bad-port.ini"); err == nil {
+		t.Errorf("Parsing a config with an invalid port should fail")
+		return
+	}
+	if err.Error() != "Invalid port number: 123456789" {
+		t.Errorf("Expected to fail for invalid port number")
 	}
 }
 
@@ -65,7 +76,6 @@ func TestParseConfigPath(t *testing.T) {
 	}
 }
 
-
 func TestParsePrivKeyPath(t *testing.T) {
 	expected := "/Users/bean/.ssh/y"
 	actual := conf.PrivKeyPath
@@ -75,10 +85,7 @@ func TestParsePrivKeyPath(t *testing.T) {
 	}
 }
 
-
 func TestParseConfigHosts(t *testing.T) {
-	fmt.Println("%v", conf.Hosts)
-
 	expected := map[string]string{
 		"server1": "10.0.0.10",
 		"server2": "server2.int.mydomain.com",
@@ -99,6 +106,29 @@ func TestParseConfigHosts(t *testing.T) {
 		if expectedHostAddr != host.Addr {
 			t.Errorf("Expected host addr \"%s\" for host name \"%s\", got \"%s\"",
 				expectedHostAddr, host.Name, host.Addr)
+		}
+	}
+}
+
+func TestParseConfigPorts(t *testing.T) {
+	expected := map[string]uint16{
+		"server1": uint16(22),
+		"server2": uint16(2222),
+		"server3": uint16(22),
+	}
+
+	for _, host := range conf.Hosts {
+		fmt.Printf("%s: %s\n", host.Name, host.Addr)
+		var expectedPortNum uint16
+		var ok bool
+		if expectedPortNum, ok = expected[host.Name]; !ok {
+			t.Errorf("Unexpected host name: %s", host.Name)
+		}
+		if expectedPortNum != host.PortNum {
+			t.Errorf("Expected port number \"%s\" for host name \"%s\", got \"%s\"",
+				strconv.FormatUint(uint64(expectedPortNum), 10),
+				host.Name,
+				strconv.FormatUint(uint64(host.PortNum), 10))
 		}
 	}
 }

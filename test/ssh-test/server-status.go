@@ -29,10 +29,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Println("Testing SSH connectivity on port 22...")  /* TODO: add port to conf file */
+	fmt.Println("Testing SSH connectivity...")
 	for _, host := range conf.Hosts {
-		fmt.Printf("%s@%s : ", host.Username, host.Addr, )
-		if err := ssh.TestDial(host.Addr, host.Username, host.Password, conf.PrivKeyPath); err == nil {
+		fmt.Printf("%s@%s:%d : ", host.Username, host.Addr, host.PortNum)
+		if err := ssh.TestDial(host.Addr, host.Username, host.Password, conf.PrivKeyPath, host.PortNum); err == nil {
 			fmt.Printf("PASS\n")
 		} else {
 			fmt.Printf("FAIL (%s)\n", err.Error())
