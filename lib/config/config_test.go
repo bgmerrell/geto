@@ -26,6 +26,26 @@ func TestParseConfigWithoutHosts(t *testing.T) {
 	}
 }
 
+func TestParseConfigWithMissingPassword(t *testing.T) {
+	if _, err = ParseConfig("../../test/data/config-missing-password.ini"); err == nil {
+		t.Errorf("Parsing a config with a missing password should fail")
+		return
+	}
+	if err.Error() != "option not found: password" {
+		t.Errorf("Expected to fail for missing password")
+	}
+}
+
+func TestParseConfigWithMissingHost(t *testing.T) {
+	if _, err = ParseConfig("../../test/data/config-missing-host.ini"); err == nil {
+		t.Errorf("Parsing a config with a missing host should fail")
+		return
+	}
+	if err.Error() != "section not found: server3" {
+		t.Errorf("Expected to fail for missing host \"server3\"")
+	}
+}
+
 func TestParseMissingConfig(t *testing.T) {
 	if _, err = ParseConfig("BOGUS-CONFIG.ini"); err == nil {
 		t.Errorf("Attempting to parse a missing config should fail")

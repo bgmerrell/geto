@@ -24,6 +24,9 @@ func init() {
 type Host struct {
 	name string
 	addr string
+	username string
+	password string
+	validPassword bool
 }
 
 type Config struct {
@@ -35,7 +38,9 @@ type Config struct {
 // Parse the config file
 // The configPath parameter is the path to the config file on the filesystem
 func ParseConfig(configPath string) (Config, error) {
+	conf = Config{}  /* Zero out the package-scope conf */
 	var err error
+	var hasPrivKey bool
 
 	if _, err = os.Stat(configPath); os.IsNotExist(err) {
 		log.Print("No configuration file: ", configPath)
@@ -53,14 +58,12 @@ func ParseConfig(configPath string) (Config, error) {
 	var privKeyPath string
 	if privKeyPath, err = c.String("geto", "privkey_path"); err == nil {
 		conf.PrivKeyPath = privKeyPath
-	} else {
-		log.Print("Failed to parse \"geto\" section: ", err.Error())
-		return conf, err
+		hasPrivKey = true
 	}
 
 	var opts []string
 	if opts, err = c.Options("hosts"); err != nil {
-		log.Print("Failed to parse \"hosts\" section: ", err.Error())
+		log.Print("Could not find \"hosts\" section: ", err.Error())
 		return conf, err
 	}
 
@@ -72,12 +75,33 @@ func ParseConfig(configPath string) (Config, error) {
 	}
 
 	for _, hostname := range opts {
-		var addr string
+		var addr, username, password string
+		var validPassword bool
 		if addr, err = c.String("hosts", hostname); err != nil {
 			log.Print("Failed to parse \"hosts\" section: ", err.Error())
 			return conf, err
 		}
-		conf.Hosts = append(conf.Hosts, Host{hostname, addr})
+		if opts, err = c.Options(hostname); err != nil {
+			log.Print("Could not find \"", hostname, "\" section: ", err.Error())
+			return conf, err
+		}
+		if username, err = c.String(hostname, "username"); err != nil {
+			log.Print("Failed to parse \"username\" option for \"",
+				hostname, "\" section: ", err.Error())
+			return conf, err
+		}
+		if password, err = c.String(hostname, "password"); err == nil {
+			validPassword = true
+		} else {
+			if !hasPrivKey {
+				log.Print("Failed to parse \"username\" option for \"",
+					hostname, "\" section: ", err.Error())
+				return conf, err
+			}
+		}
+		conf.Hosts = append(
+			conf.Hosts,
+			Host{hostname, addr, username, password, validPassword})
 	}
 
 	conf.FilePath = configPath
