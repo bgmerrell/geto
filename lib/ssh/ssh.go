@@ -16,13 +16,13 @@ import (
 	"crypto"
 	"crypto/dsa"
 	"crypto/rsa"
+	_ "crypto/sha1"
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
 	"io"
 	"io/ioutil"
 	"strconv"
-	_ "crypto/sha1"
 )
 
 const DEFAULT_SSH_PORT = 22
@@ -75,8 +75,9 @@ func (k *keychain) loadPEM(file string) error {
 }
 
 type clientPassword string
+
 func (p clientPassword) Password(user string) (string, error) {
-    return string(p), nil
+	return string(p), nil
 }
 
 func TestDial(addr string, username string, password string, privKeyPath string, portNum uint16) (err error) {
@@ -97,7 +98,7 @@ func TestDial(addr string, username string, password string, privKeyPath string,
 	}
 	client, err := ssh.Dial(
 		"tcp",
-		addr + ":" + strconv.FormatUint(uint64(portNum), 10),
+		addr+":"+strconv.FormatUint(uint64(portNum), 10),
 		config)
 	if err != nil {
 		return err

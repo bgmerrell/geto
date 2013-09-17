@@ -5,10 +5,10 @@
 package main
 
 import (
-	"github.com/bgmerrell/geto/lib/ssh"
 	"flag"
 	"fmt"
 	"github.com/bgmerrell/geto/lib/config"
+	"github.com/bgmerrell/geto/lib/ssh"
 	"os"
 )
 

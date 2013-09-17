@@ -7,4 +7,4 @@ Dispatch tasks to the hosts
 */
 package taskdispatcher
 
-type TaskDispatcher struct {}
+type TaskDispatcher struct{}

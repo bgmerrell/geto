@@ -24,24 +24,24 @@ func init() {
 }
 
 type Host struct {
-	Name string
-	Addr string
-	Username string
-	Password string
+	Name          string
+	Addr          string
+	Username      string
+	Password      string
 	ValidPassword bool
-	PortNum uint16
+	PortNum       uint16
 }
 
 type Config struct {
-	FilePath string
+	FilePath    string
 	PrivKeyPath string
-	Hosts    []Host
+	Hosts       []Host
 }
 
 // Parse the config file
 // The configPath parameter is the path to the config file on the filesystem
 func ParseConfig(configPath string) (Config, error) {
-	conf = Config{}  /* Zero out the package-scope conf */
+	conf = Config{} /* Zero out the package-scope conf */
 	var err error
 	var hasPrivKey bool
 	var portNum int
@@ -105,12 +105,12 @@ func ParseConfig(configPath string) (Config, error) {
 		}
 		if portNum, err = c.Int(hostname, "port"); err == nil {
 			/* Max of 2^16 port numbers */
-			if portNum >> 16 != 0 {
+			if portNum>>16 != 0 {
 				err = errors.New("Invalid port number: " + strconv.FormatUint(uint64(portNum), 10))
 				return conf, err
 			}
 		} else {
- 			portNum = ssh.DEFAULT_SSH_PORT
+			portNum = ssh.DEFAULT_SSH_PORT
 		}
 		conf.Hosts = append(
 			conf.Hosts,
