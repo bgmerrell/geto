@@ -27,7 +27,7 @@ import (
 
 const DEFAULT_SSH_PORT = 22
 
-// keychain implements the ClientKeyring interface
+// keychain implements the ssh.ClientKeyring interface
 type keychain struct {
 	keys []interface{}
 }
@@ -74,6 +74,7 @@ func (k *keychain) loadPEM(file string) error {
 	return nil
 }
 
+// clientPassword implements the ssh.ClientPassword interface
 type clientPassword string
 
 func (p clientPassword) Password(user string) (string, error) {
