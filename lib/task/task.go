@@ -6,3 +6,9 @@
 Provide the task structure and functions.
 */
 package task
+
+type Task struct {
+	Id string
+	DepFiles []string
+	Script script_t
+}

@@ -5,6 +5,6 @@
 /*
 Dispatch tasks to the hosts
 */
-package taskdispatcher
+package task
 
-type TaskDispatcher struct{}
+type Dispatcher struct{}
