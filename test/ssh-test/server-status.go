@@ -51,8 +51,7 @@ func testRemoteEcho() {
 			command)
 		if err != nil {
 			fmt.Printf("FAIL (%s)\n", err.Error())
-		}
-		if stdout == "test" && stderr == "" {
+		} else if stdout == "test" && stderr == "" {
 			fmt.Printf("PASS\n")
 		} else {
 			fmt.Printf("FAIL (stdout: %s, stderr: %s)\n", stdout, stderr)
