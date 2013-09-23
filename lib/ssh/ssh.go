@@ -12,6 +12,7 @@ calls are in the same place.
 package ssh
 
 import (
+	"bytes"
 	"code.google.com/p/go.crypto/ssh"
 	"crypto"
 	"crypto/dsa"
@@ -81,15 +82,12 @@ func (p clientPassword) Password(user string) (string, error) {
 	return string(p), nil
 }
 
-func TestDial(addr string, username string, password string, privKeyPath string, portNum uint16) (err error) {
-
-	// An SSH client is represented with a ClientConn. Currently only
-	// the "password" authentication method is supported.
-	//
-	// To authenticate with the remote server you must pass at least one
-	// implementation of ClientAuth via the Auth field in ClientConfig.
+// Establish a code.google.com/p/go.crypto/ssh Session.
+// The caller is responsible for closing the session.
+func getSession(addr string, username string, password string, privKeyPath string, portNum uint16) (session *ssh.Session, err error) {
 	var clientKeychain *keychain = new(keychain)
 	clientKeychain.loadPEM(privKeyPath)
+	/* Try to authenticate with a public SSH key first, try a password if that fails */
 	config := &ssh.ClientConfig{
 		User: username,
 		Auth: []ssh.ClientAuth{
@@ -102,21 +100,46 @@ func TestDial(addr string, username string, password string, privKeyPath string,
 		addr+":"+strconv.FormatUint(uint64(portNum), 10),
 		config)
 	if err != nil {
-		return err
+		return session, err
 	}
 
-	// Each ClientConn can support multiple interactive sessions,
-	// represented by a Session.
-	session, err := client.NewSession()
+	session, err = client.NewSession()
+	if err != nil {
+		return session, err
+	}
+	return session, err
+}
+
+func TestConnection(addr string, username string, password string, privKeyPath string, portNum uint16) (err error) {
+	var session *ssh.Session
+
+	session, err = getSession(addr, username, password, privKeyPath, portNum)
 	if err != nil {
 		return err
 	}
 	defer session.Close()
 
-	// Once a Session is created, you can execute a single command on
-	// the remote side using the Run method.
-	if err := session.Run("true"); err != nil {
+	if err = session.Run("true"); err != nil {
 		return err
 	}
 	return nil
+}
+
+func Run(addr string, username string, password string, privKeyPath string, portNum uint16, command string) (stdout string, stderr string, err error) {
+	var session *ssh.Session
+
+	session, err = getSession(addr, username, password, privKeyPath, portNum)
+	if err != nil {
+		return "", "", err
+	}
+	defer session.Close()
+
+	var stdout_buf bytes.Buffer
+	var stderr_buf bytes.Buffer
+	session.Stdout = &stdout_buf
+	session.Stderr = &stderr_buf
+	if err = session.Run(command); err != nil {
+		return "", "", err
+	}
+	return stdout_buf.String(), stderr_buf.String(), err
 }

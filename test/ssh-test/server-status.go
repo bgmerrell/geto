@@ -12,8 +12,10 @@ import (
 	"os"
 )
 
-/* Variables set by command line parsing */
+/* Set by command line parsing */
 var configPath string
+
+var conf config.Config
 
 func parseCommandLine() {
 	/* TODO: look for a system-wide config file in a portable manner */
@@ -21,21 +23,51 @@ func parseCommandLine() {
 	flag.Parse()
 }
 
-func main() {
-	parseCommandLine()
-	var conf config.Config
-	var err error
-	if conf, err = config.ParseConfig(configPath); err != nil {
-		os.Exit(1)
-	}
-
+func testConnection() {
 	fmt.Println("Testing SSH connectivity...")
 	for _, host := range conf.Hosts {
 		fmt.Printf("%s@%s:%d : ", host.Username, host.Addr, host.PortNum)
-		if err := ssh.TestDial(host.Addr, host.Username, host.Password, conf.PrivKeyPath, host.PortNum); err == nil {
+		if err := ssh.TestConnection(host.Addr, host.Username, host.Password, conf.PrivKeyPath, host.PortNum); err == nil {
 			fmt.Printf("PASS\n")
 		} else {
 			fmt.Printf("FAIL (%s)\n", err.Error())
 		}
 	}
+}
+
+func testRemoteEcho() {
+	var stdout, stderr string
+	var command string = "echo -n test"
+	var err error
+	fmt.Println("Testing remote echo...")
+	for _, host := range conf.Hosts {
+		fmt.Printf("%s@%s:%d : ", host.Username, host.Addr, host.PortNum)
+		stdout, stderr, err = ssh.Run(
+			host.Addr,
+			host.Username,
+			host.Password,
+			conf.PrivKeyPath,
+			host.PortNum,
+			command)
+		if err != nil {
+			fmt.Printf("FAIL (%s)\n", err.Error())
+		}
+		if stdout == "test" && stderr == "" {
+			fmt.Printf("PASS\n")
+		} else {
+			fmt.Printf("FAIL (stdout: %s, stderr: %s)\n", stdout, stderr)
+		}
+	}
+}
+
+
+func main() {
+	parseCommandLine()
+	var err error
+	if conf, err = config.ParseConfig(configPath); err != nil {
+		os.Exit(1)
+	}
+	testConnection()
+	fmt.Println("")
+	testRemoteEcho()
 }
