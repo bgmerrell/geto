@@ -5,11 +5,11 @@
 package task
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
-	"fmt"
 )
 
 const TESTDATADIR = "../../test/data"
@@ -38,11 +38,11 @@ func TestNewScriptFromPath(t *testing.T) {
 	}
 
 	if fmt.Sprintf("%#v", expected) != fmt.Sprintf("%#v", script.commands) {
-		t.Errorf("Unexpected script contents:\n" +
-			 "Actual: %#v\n" + 
-			 "Expected: %#v",
-			 script.commands,
-		  	 expected)
+		t.Errorf("Unexpected script contents:\n"+
+			"Actual: %#v\n"+
+			"Expected: %#v",
+			script.commands,
+			expected)
 	}
 }
 
@@ -56,7 +56,7 @@ func TestScriptFileFrom(t *testing.T) {
 	if err != nil {
 		t.Fatal("Failed to open temporary file: %s", err.Error())
 	}
-        temp_f.Close()	
+	temp_f.Close()
 	defer os.Remove(temp_f.Name())
 
 	script.ToFile(temp_f.Name())
@@ -70,14 +70,14 @@ func TestScriptFileFrom(t *testing.T) {
 		t.Fatal("Failed to read existing script file: %s", err.Error())
 	}
 	if fmt.Sprintf("%#v", string(expected)) != fmt.Sprintf("%#v", string(actual)) {
-		t.Errorf("Unexpected script file contents:\n" +
-			 "Actual:\n" + 
-			 "---------\n" +
-			 "%s" +
-			 "\nExpected:\n" +
-			 "---------\n" +
-			 "%s",
-			 string(actual),
-		  	 string(expected))
+		t.Errorf("Unexpected script file contents:\n"+
+			"Actual:\n"+
+			"---------\n"+
+			"%s"+
+			"\nExpected:\n"+
+			"---------\n"+
+			"%s",
+			string(actual),
+			string(expected))
 	}
 }

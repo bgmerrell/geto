@@ -13,7 +13,7 @@ import (
 )
 
 type script_t struct {
-	name string
+	name     string
 	commands []string
 }
 
@@ -30,10 +30,10 @@ func NewScriptFromPath(name string, path string) (script_t, error) {
 	var s script_t = script_t{name, []string{}}
 
 	f, err := os.Open(path)
-        if err != nil {
+	if err != nil {
 		return s, err
-        }
-        defer f.Close()	
+	}
+	defer f.Close()
 
 	/* TODO: Is there a better way to do this?  I need ot understand the bufio scanner
 	(and Go scanners in general) better */
@@ -51,10 +51,10 @@ func NewScriptFromPath(name string, path string) (script_t, error) {
 // The desired file path is provided by the user and the file is overwritten if it already exists.
 func (s *script_t) ToFile(path string) error {
 	f, err := os.Create(path)
-        if err != nil {
+	if err != nil {
 		return err
-        }
-        defer f.Close()	
+	}
+	defer f.Close()
 
 	for _, c := range s.commands {
 		f.Write([]byte(c + "\n"))

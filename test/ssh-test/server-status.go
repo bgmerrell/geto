@@ -60,7 +60,6 @@ func testRemoteEcho() {
 	}
 }
 
-
 func main() {
 	parseCommandLine()
 	var err error
