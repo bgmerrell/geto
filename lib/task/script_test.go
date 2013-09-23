@@ -69,7 +69,7 @@ func TestScriptFileFrom(t *testing.T) {
 	if err != nil {
 		t.Fatal("Failed to read existing script file: %s", err.Error())
 	}
-	if fmt.Sprintf("%#v", string(expected)) == fmt.Sprintf("%#v", string(actual)) {
+	if fmt.Sprintf("%#v", string(expected)) != fmt.Sprintf("%#v", string(actual)) {
 		t.Errorf("Unexpected script file contents:\n" +
 			 "Actual:\n" + 
 			 "---------\n" +
