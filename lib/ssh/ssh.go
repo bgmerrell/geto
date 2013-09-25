@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"os/exec"
 	"strconv"
 )
 
@@ -184,28 +185,82 @@ func Run(
 	return stdout_buf.String(), stderr_buf.String(), err
 }
 
+// Secure copy (scp) from localhost to addr
 // Run a separate scp process (for now) to secure copy files between hosts.
-// Only copying between the master and a single slave is supported.
 // The addr parameter is the address (IP, hostname, etc) of the remote host.
 // The privKeyPath parameter is the path to the private key of the master.
 // The portNum is the SSH port number of the remote host.
 // The incoming parameter indicates which direction to perform the copy.
 // The recursive parameter indicates whether to use the -r scp option.
 // Password authentication not supported for this function.
-func Scp(
+// XXX: This function should probably go away in favor of a single Scp function when Issue #1 is fixed.
+func ScpTo(
 	addr string,
 	username string,
 	portNum uint16,
-	incoming bool,
-	recursive bool) (stdout string, stderr string, err error) {
+	recursive bool,
+	localPath string,
+	remotePath string) (err error) {
 
 	/* Unfortunately, there doesn't appear to be an SFTP or SCP library, so
 	we'll just have to run a separate scp process.  This means no password
 	authentication for when calling this method. */
-	var command string = "scp "
+	var stdout bytes.Buffer
+	var args []string = []string{}
+	var cmd *exec.Cmd
 	if recursive {
-		command += "-r "
+		args = append(args, "-r")
 	}
-	/* TODO: Finish this */
-	return "", "", nil
+	args = append(args, fmt.Sprintf("-P"))
+	args = append(args, strconv.FormatUint(uint64(portNum), 10))
+	args = append(args, localPath)
+	args = append(args, fmt.Sprintf("%s@%s:%s", username, addr, remotePath))
+	cmd = exec.Command("scp", args...)
+	cmd.Stderr = &stdout
+	err = cmd.Run()
+	if err != nil {
+		return errors.New("scp to " + addr + " failed: " + err.Error())
+	}
+	return nil
+
+}
+
+// Secure copy (scp) from addr to localhost
+// Run a separate scp process (for now) to secure copy files between hosts.
+// The addr parameter is the address (IP, hostname, etc) of the remote host.
+// The privKeyPath parameter is the path to the private key of the master.
+// The portNum is the SSH port number of the remote host.
+// The incoming parameter indicates which direction to perform the copy.
+// The recursive parameter indicates whether to use the -r scp option.
+// Password authentication not supported for this function.
+// XXX: This function should probably go away in favor of a single Scp function when Issue #1 is fixed.
+func ScpFrom(
+	addr string,
+	username string,
+	portNum uint16,
+	recursive bool,
+	remotePath string,
+	localPath string) (err error) {
+
+	/* Unfortunately, there doesn't appear to be an SFTP or SCP library, so
+	we'll just have to run a separate scp process.  This means no password
+	authentication for when calling this method. */
+	var stdout bytes.Buffer
+	var args []string = []string{}
+	var cmd *exec.Cmd
+	if recursive {
+		args = append(args, "-r")
+	}
+	args = append(args, fmt.Sprintf("-P"))
+	args = append(args, strconv.FormatUint(uint64(portNum), 10))
+	args = append(args, fmt.Sprintf("%s@%s:%s", username, addr, remotePath))
+	args = append(args, localPath)
+	cmd = exec.Command("scp", args...)
+	fmt.Printf("%v", cmd.Args)
+	cmd.Stderr = &stdout
+	err = cmd.Run()
+	if err != nil {
+		return errors.New("scp to " + addr + "failed: " + err.Error())
+	}
+	return nil
 }

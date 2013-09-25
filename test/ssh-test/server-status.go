@@ -12,6 +12,8 @@ import (
 	"os"
 )
 
+const SCP_TEST_PATH = "/tmp/geto-scp-test.txt"
+
 /* Set by command line parsing */
 var configPath string
 
@@ -33,6 +35,65 @@ func testConnection() {
 			fmt.Printf("FAIL (%s)\n", err.Error())
 		}
 	}
+}
+
+func testScpToRemote() (err error) {
+	fmt.Println("Testing SCP of local file to remote host(s)...")
+	f, err := os.Create(SCP_TEST_PATH)
+	defer f.Close()
+	defer os.Remove(f.Name())
+	if err != nil {
+		fmt.Printf("Failed to open %s: %s", SCP_TEST_PATH, err.Error())
+		return
+	}
+	if _, err = f.Write([]byte("Testing 1, 2, 3\n")); err != nil {
+		fmt.Printf("Failed to write to %s: %s", SCP_TEST_PATH, err.Error())
+		return
+	}
+	for _, host := range conf.Hosts {
+		fmt.Printf("%s@%s:%d : ", host.Username, host.Addr, host.PortNum)
+		err = ssh.ScpTo(
+			host.Addr,
+			host.Username,
+			host.PortNum,
+			false,
+			SCP_TEST_PATH,
+			SCP_TEST_PATH)
+		if err != nil {
+			fmt.Printf("FAIL (%s)\n", err.Error())
+		} else {
+			fmt.Printf("PASS\n")
+		}
+	}
+	return nil
+}
+
+func testScpFromRemote() (err error) {
+	fmt.Println("Testing SCP of remote file to localhost...")
+	for _, host := range conf.Hosts {
+		fmt.Printf("%s@%s:%d : ", host.Username, host.Addr, host.PortNum)
+		err = ssh.ScpFrom(
+			host.Addr,
+			host.Username,
+			host.PortNum,
+			false,
+			SCP_TEST_PATH,
+			SCP_TEST_PATH)
+		/* Clean up remote side, we don't care too much if it fails */
+		ssh.Run(
+			host.Addr,
+			host.Username,
+			host.Password,
+			conf.PrivKeyPath,
+			host.PortNum,
+			fmt.Sprintf("rm %s", SCP_TEST_PATH))
+		if err != nil {
+			fmt.Printf("FAIL (%s)\n", err.Error())
+		} else {
+			fmt.Printf("PASS\n")
+		}
+	}
+	return nil
 }
 
 func testRemoteEcho() {
@@ -68,4 +129,8 @@ func main() {
 	testConnection()
 	fmt.Println("")
 	testRemoteEcho()
+	fmt.Println("")
+	testScpToRemote()
+	fmt.Println("")
+	testScpFromRemote()
 }
