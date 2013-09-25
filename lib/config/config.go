@@ -27,8 +27,7 @@ type Host struct {
 	Name          string
 	Addr          string
 	Username      string
-	Password      string
-	ValidPassword bool
+	Password      *string /* nil means no password */
 	PortNum       uint16
 }
 
@@ -43,7 +42,6 @@ type Config struct {
 func ParseConfig(configPath string) (Config, error) {
 	conf = Config{} /* Zero out the package-scope conf */
 	var err error
-	var hasPrivKey bool
 	var portNum int
 
 	if _, err = os.Stat(configPath); os.IsNotExist(err) {
@@ -62,7 +60,6 @@ func ParseConfig(configPath string) (Config, error) {
 	var privKeyPath string
 	if privKeyPath, err = c.String("geto", "privkey_path"); err == nil {
 		conf.PrivKeyPath = privKeyPath
-		hasPrivKey = true
 	}
 
 	var opts []string
@@ -79,8 +76,8 @@ func ParseConfig(configPath string) (Config, error) {
 	}
 
 	for _, hostname := range opts {
-		var addr, username, password string
-		var validPassword bool
+		var addr, username string
+		var password *string = new(string)
 		if addr, err = c.String("hosts", hostname); err != nil {
 			log.Print("Failed to parse \"hosts\" section: ", err.Error())
 			return conf, err
@@ -94,10 +91,10 @@ func ParseConfig(configPath string) (Config, error) {
 				hostname, "\" section: ", err.Error())
 			return conf, err
 		}
-		if password, err = c.String(hostname, "password"); err == nil {
-			validPassword = true
-		} else {
-			if !hasPrivKey {
+		if *password, err = c.String(hostname, "password"); err != nil {
+			password = nil
+			/* If there's no private key path, a username is required */
+			if conf.PrivKeyPath == "" {
 				log.Print("Failed to parse \"username\" option for \"",
 					hostname, "\" section: ", err.Error())
 				return conf, err
@@ -114,7 +111,7 @@ func ParseConfig(configPath string) (Config, error) {
 		}
 		conf.Hosts = append(
 			conf.Hosts,
-			Host{hostname, addr, username, password, validPassword, uint16(portNum)})
+			Host{hostname, addr, username, password, uint16(portNum)})
 	}
 
 	conf.FilePath = configPath
@@ -122,11 +119,12 @@ func ParseConfig(configPath string) (Config, error) {
 	return conf, nil
 }
 
-// Return the Config object.
-// ParseConfig should probably be called before this function
-func GetConfig() Config {
+// Return the parsed Config object.
+// Panic if the config has not been parsed
+// ParseConfig should be called before this function
+func GetParsedConfig() Config {
 	if !isParsed {
-		log.Println("Warning: unparsed configuration")
+		panic("unparsed configuration")
 	}
 	return conf
 }

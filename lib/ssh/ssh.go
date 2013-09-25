@@ -21,6 +21,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"strconv"
@@ -84,16 +85,36 @@ func (p clientPassword) Password(user string) (string, error) {
 
 // Establish a code.google.com/p/go.crypto/ssh Session.
 // The caller is responsible for closing the session.
-func getSession(addr string, username string, password string, privKeyPath string, portNum uint16) (session *ssh.Session, err error) {
-	var clientKeychain *keychain = new(keychain)
-	clientKeychain.loadPEM(privKeyPath)
+func getSession(
+	addr string,
+	username string,
+	password *string,
+	privKeyPath string,
+	portNum uint16) (session *ssh.Session, err error) {
+
+	var authorizers []ssh.ClientAuth = []ssh.ClientAuth{}
+	if privKeyPath != "" {
+		var clientKeychain *keychain = new(keychain)
+		if err := clientKeychain.loadPEM(privKeyPath); err != nil {
+			return session, err
+		}
+		authorizers = append(
+			authorizers, ssh.ClientAuthKeyring(clientKeychain))
+	}
+
+	if password != nil {
+		authorizers = append(
+			authorizers, ssh.ClientAuthPassword(clientPassword(*password)))
+	}
+
+	if len(authorizers) == 0 {
+		return session, errors.New("No authorization methods provided")
+	}
+
 	/* Try to authenticate with a public SSH key first, try a password if that fails */
 	config := &ssh.ClientConfig{
 		User: username,
-		Auth: []ssh.ClientAuth{
-			ssh.ClientAuthKeyring(clientKeychain),
-			ssh.ClientAuthPassword(clientPassword(password)),
-		},
+		Auth: authorizers,
 	}
 	client, err := ssh.Dial(
 		"tcp",
@@ -110,7 +131,13 @@ func getSession(addr string, username string, password string, privKeyPath strin
 	return session, err
 }
 
-func TestConnection(addr string, username string, password string, privKeyPath string, portNum uint16) (err error) {
+func TestConnection(
+	addr string,
+	username string,
+	password *string,
+	privKeyPath string,
+	portNum uint16) (err error) {
+
 	var session *ssh.Session
 
 	session, err = getSession(addr, username, password, privKeyPath, portNum)
@@ -125,7 +152,20 @@ func TestConnection(addr string, username string, password string, privKeyPath s
 	return nil
 }
 
-func Run(addr string, username string, password string, privKeyPath string, portNum uint16, command string) (stdout string, stderr string, err error) {
+// The addr parameter is the address (IP, hostname, etc) of the remote host.
+// The username parameter is the username to use to SSH to the remote host.
+// The password parameter is the password to use to SSH to the remote host.
+// The privKeyPath parameter is the path to the private key of the master.
+// The portNum is the SSH port number of the remote host.
+// The command parameter is the command to run on the remote host.
+func Run(
+	addr string,
+	username string,
+	password *string,
+	privKeyPath string,
+	portNum uint16,
+	command string) (stdout string, stderr string, err error) {
+
 	var session *ssh.Session
 
 	session, err = getSession(addr, username, password, privKeyPath, portNum)
@@ -142,4 +182,30 @@ func Run(addr string, username string, password string, privKeyPath string, port
 		return "", "", err
 	}
 	return stdout_buf.String(), stderr_buf.String(), err
+}
+
+// Run a separate scp process (for now) to secure copy files between hosts.
+// Only copying between the master and a single slave is supported.
+// The addr parameter is the address (IP, hostname, etc) of the remote host.
+// The privKeyPath parameter is the path to the private key of the master.
+// The portNum is the SSH port number of the remote host.
+// The incoming parameter indicates which direction to perform the copy.
+// The recursive parameter indicates whether to use the -r scp option.
+// Password authentication not supported for this function.
+func Scp(
+	addr string,
+	username string,
+	portNum uint16,
+	incoming bool,
+	recursive bool) (stdout string, stderr string, err error) {
+
+	/* Unfortunately, there doesn't appear to be an SFTP or SCP library, so
+	we'll just have to run a separate scp process.  This means no password
+	authentication for when calling this method. */
+	var command string = "scp "
+	if recursive {
+		command += "-r "
+	}
+	/* TODO: Finish this */
+	return "", "", nil
 }
