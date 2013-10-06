@@ -52,6 +52,7 @@ func testScpToRemote() (err error) {
 		return
 	}
 	for _, host := range conf.Hosts {
+		fmt.Printf("%s@%s:%d : ", host.Username, host.Addr, host.PortNum)
 		err = ssh.ScpTo(
 			host.Addr,
 			host.Username,

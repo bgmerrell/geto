@@ -246,7 +246,6 @@ func ScpFrom(
 	args = append(args, fmt.Sprintf("%s@%s:%s", username, addr, remotePath))
 	args = append(args, localPath)
 	cmd = exec.Command("scp", args...)
-	fmt.Printf("%v", cmd.Args)
 	cmd.Stderr = &stdout
 	err = cmd.Run()
 	if err != nil {
