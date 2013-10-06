@@ -10,6 +10,7 @@ import (
 	"github.com/bgmerrell/geto/lib/config"
 	"github.com/bgmerrell/geto/lib/ssh"
 	"os"
+	"time"
 )
 
 const SCP_TEST_PATH = "/tmp/geto-scp-test.txt"
@@ -51,7 +52,6 @@ func testScpToRemote() (err error) {
 		return
 	}
 	for _, host := range conf.Hosts {
-		fmt.Printf("%s@%s:%d : ", host.Username, host.Addr, host.PortNum)
 		err = ssh.ScpTo(
 			host.Addr,
 			host.Username,
@@ -86,7 +86,8 @@ func testScpFromRemote() (err error) {
 			host.Password,
 			conf.PrivKeyPath,
 			host.PortNum,
-			fmt.Sprintf("rm %s", SCP_TEST_PATH))
+			fmt.Sprintf("rm %s", SCP_TEST_PATH),
+			0)
 		if err != nil {
 			fmt.Printf("FAIL (%s)\n", err.Error())
 		} else {
@@ -109,10 +110,48 @@ func testRemoteEcho() {
 			host.Password,
 			conf.PrivKeyPath,
 			host.PortNum,
-			command)
+			command,
+			0)
 		if err != nil {
 			fmt.Printf("FAIL (%s)\n", err.Error())
 		} else if stdout == "test" && stderr == "" {
+			fmt.Printf("PASS\n")
+		} else {
+			fmt.Printf("FAIL (stdout: %s, stderr: %s)\n", stdout, stderr)
+		}
+	}
+}
+
+func testTimeout() {
+	/* All durations in seconds */
+	const sleepDuration = 8
+	/* padding for things over than the execution of the actual remote sleep */
+	const padDuration = 2
+	const timeoutDuration = 3
+
+	var stdout, stderr string
+	var err error
+	fmt.Println("Testing timeout for remote run...")
+	for _, host := range conf.Hosts {
+		fmt.Printf("%s@%s:%d : ", host.Username, host.Addr, host.PortNum)
+		start := time.Now()
+		stdout, stderr, err = ssh.Run(
+			host.Addr,
+			host.Username,
+			host.Password,
+			conf.PrivKeyPath,
+			host.PortNum,
+			fmt.Sprintf("%s %d", "sleep", sleepDuration),
+			timeoutDuration)
+		elapsed := time.Since(start)
+		if err != nil {
+			fmt.Printf("FAIL (%s)\n", err.Error())
+		/* Padding time of 2 second on top of the remote sleep command  */
+		} else if elapsed > timeoutDuration + padDuration {
+			fmt.Printf("FAIL (took %.1f seconds, expected < %d)\n",
+				elapsed.Seconds(),
+				timeoutDuration + padDuration)
+		} else if stdout == "" && stderr == "" {
 			fmt.Printf("PASS\n")
 		} else {
 			fmt.Printf("FAIL (stdout: %s, stderr: %s)\n", stdout, stderr)
@@ -126,6 +165,8 @@ func main() {
 	if conf, err = config.ParseConfig(configPath); err != nil {
 		os.Exit(1)
 	}
+	testTimeout()
+	fmt.Println("")
 	testConnection()
 	fmt.Println("")
 	testRemoteEcho()

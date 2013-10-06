@@ -14,12 +14,6 @@ package ssh
 import (
 	"bytes"
 	"code.google.com/p/go.crypto/ssh"
-	"crypto"
-	"crypto/dsa"
-	"crypto/rsa"
-	_ "crypto/sha1"
-	"crypto/x509"
-	"encoding/pem"
 	"errors"
 	"fmt"
 	"io"
@@ -32,32 +26,23 @@ const DEFAULT_SSH_PORT = 22
 
 // keychain implements the ssh.ClientKeyring interface
 type keychain struct {
-	keys []interface{}
+	keys []ssh.Signer
 }
 
 func (k *keychain) Key(i int) (ssh.PublicKey, error) {
 	if i < 0 || i >= len(k.keys) {
 		return nil, nil
 	}
-	switch key := k.keys[i].(type) {
-	case *rsa.PrivateKey:
-		return ssh.NewRSAPublicKey(&key.PublicKey), nil
-	case *dsa.PrivateKey:
-		return ssh.NewDSAPublicKey(&key.PublicKey), nil
-	}
-	panic("unknown key type")
+
+	return k.keys[i].PublicKey(), nil
 }
 
 func (k *keychain) Sign(i int, rand io.Reader, data []byte) (sig []byte, err error) {
-	hashFunc := crypto.SHA1
-	h := hashFunc.New()
-	h.Write(data)
-	digest := h.Sum(nil)
-	switch key := k.keys[i].(type) {
-	case *rsa.PrivateKey:
-		return rsa.SignPKCS1v15(rand, key, hashFunc, digest)
-	}
-	return nil, errors.New("ssh: unknown key type")
+	return k.keys[i].Sign(rand, data)
+}
+
+func (k *keychain) add(key ssh.Signer) {
+	k.keys = append(k.keys, key)
 }
 
 func (k *keychain) loadPEM(file string) error {
@@ -65,15 +50,11 @@ func (k *keychain) loadPEM(file string) error {
 	if err != nil {
 		return err
 	}
-	block, _ := pem.Decode(buf)
-	if block == nil {
-		return errors.New("ssh: no key found")
-	}
-	r, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	key, err := ssh.ParsePrivateKey(buf)
 	if err != nil {
 		return err
 	}
-	k.keys = append(k.keys, r)
+	k.add(key)
 	return nil
 }
 
@@ -157,15 +138,18 @@ func TestConnection(
 // The username parameter is the username to use to SSH to the remote host.
 // The password parameter is the password to use to SSH to the remote host.
 // The privKeyPath parameter is the path to the private key of the master.
-// The portNum is the SSH port number of the remote host.
+// The portNum parameter is the SSH port number of the remote host.
 // The command parameter is the command to run on the remote host.
+// The timeout parameter is the number of seconds before abandoning the command.
+// A timeout of 0 means no timeout.
 func Run(
 	addr string,
 	username string,
 	password *string,
 	privKeyPath string,
 	portNum uint16,
-	command string) (stdout string, stderr string, err error) {
+	command string,
+	timeout uint32) (stdout string, stderr string, err error) {
 
 	var session *ssh.Session
 
@@ -179,9 +163,15 @@ func Run(
 	var stderr_buf bytes.Buffer
 	session.Stdout = &stdout_buf
 	session.Stderr = &stderr_buf
+
+	if timeout != 0 {
+		// TODO: kill the remote process if there is a timeout
+	}
+
 	if err = session.Run(command); err != nil {
 		return "", "", err
 	}
+
 	return stdout_buf.String(), stderr_buf.String(), err
 }
 
