@@ -9,13 +9,22 @@ import (
 	"testing"
 )
 
+const expectedPattern = "[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}"
+var validId *regexp.Regexp
+
+func init() {
+	validId = regexp.MustCompile(expectedPattern)
+}
+
 func TestGenTaskId(t *testing.T) {
 	const numToGen = 50
 	var taskIds map[string]bool = make(map[string]bool, numToGen)
-	var expectedPattern = "[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}"
-	var validId = regexp.MustCompile(expectedPattern)
+	var id string
+	var err error
 	for i := 0; i < numToGen; i++ {
-		id := genTaskId()
+		if id, err = genTaskId(); err != nil {
+			t.Fatalf(err.Error())
+		}
 		matched := validId.MatchString(id)
 		if !matched {
 			t.Errorf("Task ID %s did not match expected pattern of %s",
@@ -26,5 +35,20 @@ func TestGenTaskId(t *testing.T) {
 	}
 	if len(taskIds) != numToGen {
 		t.Errorf("Expected %d unique IDs, got %d", numToGen, len(taskIds))
+	}
+}
+
+func TestNewTask(t *testing.T) {
+	var script script_t = NewScript("test")
+	var depFiles []string
+	var task Task
+	var err error
+	if task, err = NewTask(depFiles, script); err != nil {
+		t.Fatalf("Failed to create new Task: " + err.Error())
+	}
+	if !validId.MatchString(task.Id) {
+		t.Errorf("Task ID %s did not match expected pattern of %s",
+			task.Id,
+			expectedPattern)
 	}
 }
