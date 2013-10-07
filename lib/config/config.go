@@ -9,6 +9,7 @@ package config
 
 import (
 	"errors"
+	"github.com/bgmerrell/geto/lib/host"
 	"github.com/bgmerrell/geto/lib/ssh"
 	"github.com/robfig/config"
 	"log"
@@ -23,18 +24,10 @@ func init() {
 	conf = Config{}
 }
 
-type Host struct {
-	Name     string
-	Addr     string
-	Username string
-	Password *string /* nil means no password */
-	PortNum  uint16
-}
-
 type Config struct {
 	FilePath    string
 	PrivKeyPath string
-	Hosts       []Host
+	Hosts       []host.Host
 }
 
 // Parse the config file
@@ -111,7 +104,7 @@ func ParseConfig(configPath string) (Config, error) {
 		}
 		conf.Hosts = append(
 			conf.Hosts,
-			Host{hostname, addr, username, password, uint16(portNum)})
+			host.Host{hostname, addr, username, password, uint16(portNum)})
 	}
 
 	conf.FilePath = configPath

@@ -10,6 +10,7 @@ import (
 )
 
 const expectedPattern = "[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}"
+
 var validId *regexp.Regexp
 
 func init() {
@@ -18,7 +19,7 @@ func init() {
 
 func TestGenTaskId(t *testing.T) {
 	const numToGen = 50
-	var taskIds map[string]bool = make(map[string]bool, numToGen)
+	var taskIds map[string]struct{} = make(map[string]struct{}, numToGen)
 	var id string
 	var err error
 	for i := 0; i < numToGen; i++ {
@@ -31,7 +32,7 @@ func TestGenTaskId(t *testing.T) {
 				id,
 				expectedPattern)
 		}
-		taskIds[id] = true
+		taskIds[id] = struct{}{}
 	}
 	if len(taskIds) != numToGen {
 		t.Errorf("Expected %d unique IDs, got %d", numToGen, len(taskIds))

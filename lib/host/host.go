@@ -3,8 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
-Dispatch tasks to the hosts
+Provide the host structure
 */
-package task
+package host
 
-type Dispatcher struct{}
+type Host struct {
+	Name     string
+	Addr     string
+	Username string
+	Password *string /* nil means no password */
+	PortNum  uint16
+}
