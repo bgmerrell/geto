@@ -8,8 +8,8 @@ Provide the task structure and functions.
 package task
 
 import (
-	"os"
 	"fmt"
+	"os"
 )
 
 type Task struct {
@@ -22,10 +22,10 @@ type Task struct {
 func genTaskId() string {
 	// 8 bytes should be good enough
 	const numBytes = 8
-        f, _ := os.Open("/dev/urandom")
-        b := make([]byte, numBytes)
-        f.Read(b)
-        f.Close()
-        uuid := fmt.Sprintf("%x-%x-%x-%x", b[0:2], b[2:4], b[4:6], b[6:8])
-        return uuid
+	f, _ := os.Open("/dev/urandom")
+	b := make([]byte, numBytes)
+	f.Read(b)
+	f.Close()
+	uuid := fmt.Sprintf("%x-%x-%x-%x", b[0:2], b[2:4], b[4:6], b[6:8])
+	return uuid
 }

@@ -24,11 +24,11 @@ func init() {
 }
 
 type Host struct {
-	Name          string
-	Addr          string
-	Username      string
-	Password      *string /* nil means no password */
-	PortNum       uint16
+	Name     string
+	Addr     string
+	Username string
+	Password *string /* nil means no password */
+	PortNum  uint16
 }
 
 type Config struct {

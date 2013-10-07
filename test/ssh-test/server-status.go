@@ -147,11 +147,10 @@ func testTimeout() {
 		elapsed := time.Since(start)
 		if err != nil {
 			fmt.Printf("FAIL (%s)\n", err.Error())
-		/* Padding time of 2 second on top of the remote sleep command  */
-		} else if elapsed > timeoutDuration + padDuration {
+		} else if elapsed > timeoutDuration+padDuration {
 			fmt.Printf("FAIL (took %.1f seconds, expected < %d)\n",
 				elapsed.Seconds(),
-				timeoutDuration + padDuration)
+				timeoutDuration+padDuration)
 		} else if stdout == "" && stderr == "" {
 			fmt.Printf("PASS\n")
 		} else {
