@@ -85,6 +85,24 @@ func TestParsePrivKeyPath(t *testing.T) {
 	}
 }
 
+func TestParseRemoteWorkPath(t *testing.T) {
+	expected := "/tmp/geto"
+	actual := conf.RemoteWorkPath
+	if expected != actual {
+		t.Errorf("Remote work path (%s) does not match expected (%s)",
+			actual, expected)
+	}
+}
+
+func TestParseLocalWorkPath(t *testing.T) {
+	expected := "/tmp/geto"
+	actual := conf.LocalWorkPath
+	if expected != actual {
+		t.Errorf("Local work path (%s) does not match expected (%s)",
+			actual, expected)
+	}
+}
+
 func TestParseConfigHosts(t *testing.T) {
 	expected := map[string]string{
 		"server1": "10.0.0.10",

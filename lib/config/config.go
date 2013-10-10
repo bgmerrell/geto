@@ -11,7 +11,7 @@ import (
 	"errors"
 	"github.com/bgmerrell/geto/lib/host"
 	"github.com/bgmerrell/geto/lib/ssh"
-	"github.com/robfig/config"
+	"github.com/bgmerrell/config"
 	"log"
 	"os"
 	"strconv"
@@ -27,6 +27,8 @@ func init() {
 type Config struct {
 	FilePath    string
 	PrivKeyPath string
+	RemoteWorkPath string
+	LocalWorkPath string
 	Hosts       []host.Host
 }
 
@@ -53,6 +55,16 @@ func ParseConfig(configPath string) (Config, error) {
 	var privKeyPath string
 	if privKeyPath, err = c.String("geto", "privkey_path"); err == nil {
 		conf.PrivKeyPath = privKeyPath
+	}
+
+	var remoteWorkPath string
+	if remoteWorkPath, err = c.String("geto", "remote_work_path"); err == nil {
+		conf.RemoteWorkPath = remoteWorkPath
+	}
+
+	var localWorkPath string
+	if localWorkPath, err = c.String("geto", "local_work_path"); err == nil {
+		conf.LocalWorkPath = localWorkPath
 	}
 
 	var opts []string
