@@ -53,7 +53,7 @@ func TestParseConfigWithNoWorkPaths(t *testing.T) {
 		return
 	}
 	if err.Error() != "option not found: remote_work_path" &&
-	   err.Error() != "option not found: local_work_path" {
+		err.Error() != "option not found: local_work_path" {
 		t.Errorf("Expected to fail for missing work paths")
 	}
 }

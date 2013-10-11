@@ -9,9 +9,9 @@ package config
 
 import (
 	"errors"
+	"github.com/bgmerrell/config"
 	"github.com/bgmerrell/geto/lib/host"
 	"github.com/bgmerrell/geto/lib/ssh"
-	"github.com/bgmerrell/config"
 	"log"
 	"os"
 	"strconv"
@@ -25,11 +25,11 @@ func init() {
 }
 
 type Config struct {
-	FilePath    string
-	PrivKeyPath string
+	FilePath       string
+	PrivKeyPath    string
 	RemoteWorkPath string
-	LocalWorkPath string
-	Hosts       []host.Host
+	LocalWorkPath  string
+	Hosts          []host.Host
 }
 
 // Parse the config file
