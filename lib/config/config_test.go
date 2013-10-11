@@ -47,6 +47,17 @@ func TestParseConfigWithBadPort(t *testing.T) {
 	}
 }
 
+func TestParseConfigWithNoWorkPaths(t *testing.T) {
+	if _, err = ParseConfig("../../test/data/config-no-work-paths.ini"); err == nil {
+		t.Errorf("Parsing a config with no work paths should fail")
+		return
+	}
+	if err.Error() != "option not found: remote_work_path" &&
+	   err.Error() != "option not found: local_work_path" {
+		t.Errorf("Expected to fail for missing work paths")
+	}
+}
+
 func TestParseConfigWithMissingHost(t *testing.T) {
 	if _, err = ParseConfig("../../test/data/config-missing-host.ini"); err == nil {
 		t.Errorf("Parsing a config with a missing host should fail")

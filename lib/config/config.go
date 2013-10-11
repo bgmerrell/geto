@@ -57,14 +57,14 @@ func ParseConfig(configPath string) (Config, error) {
 		conf.PrivKeyPath = privKeyPath
 	}
 
-	var remoteWorkPath string
-	if remoteWorkPath, err = c.String("geto", "remote_work_path"); err == nil {
-		conf.RemoteWorkPath = remoteWorkPath
+	if conf.RemoteWorkPath, err = c.String("geto", "remote_work_path"); err != nil {
+		log.Print("Failed to parse remote work path: ", err.Error())
+		return conf, err
 	}
 
-	var localWorkPath string
-	if localWorkPath, err = c.String("geto", "local_work_path"); err == nil {
-		conf.LocalWorkPath = localWorkPath
+	if conf.LocalWorkPath, err = c.String("geto", "local_work_path"); err != nil {
+		log.Print("Failed to parse local work path: ", err.Error())
+		return conf, err
 	}
 
 	var opts []string
