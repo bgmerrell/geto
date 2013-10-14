@@ -13,21 +13,34 @@ import (
 )
 
 const TESTDATADIR = "../../test/data"
+const TEST_NAME = "test"
 
 func TestNewScript(t *testing.T) {
-	var s script_t = NewScript("test")
-	if s.name != "test" {
-		t.Errorf("Error constructing new script")
+	var s script_t = NewScript(TEST_NAME, nil)
+	if s.name != TEST_NAME {
+		t.Errorf(fmt.Sprintf(
+			"Error constructing new script: Expected name \"%s\", got \"%s\"", TEST_NAME, s.name))
+	}
+	if s.maxConcurrent != nil {
+		t.Errorf(fmt.Sprintf(
+			"Error constructing new script: Expected \"nil\" maxConcurrent, got \"%d\"", s.maxConcurrent))
 	}
 }
 
+
 func TestNewScriptFromPath(t *testing.T) {
-	script, err := NewScriptFromPath("test", filepath.Join(TESTDATADIR, "script.sh"))
+	TEST_MAX_CONCURRENT := uint32(100)
+	s, err := NewScriptFromPath(TEST_NAME, filepath.Join(TESTDATADIR, "script.sh"), &TEST_MAX_CONCURRENT)
 	if err != nil {
 		t.Fatalf("Error constructing new script: %s", err.Error())
 	}
-	if script.name != "test" {
-		t.Fatalf("Error constructing new script")
+	if s.name != TEST_NAME {
+		t.Fatalf(fmt.Sprintf(
+			"Error constructing new script: Expected name \"%s\", got \"%s\"", TEST_NAME, s.name))
+	}
+	if s.maxConcurrent != nil && *s.maxConcurrent != TEST_MAX_CONCURRENT {
+		t.Fatalf(fmt.Sprintf(
+			"Error constructing new script: Expected \"%d\" maxConcurrent, got \"%d\"", TEST_MAX_CONCURRENT, s.maxConcurrent))
 	}
 
 	var expected []string = []string{
@@ -37,18 +50,18 @@ func TestNewScriptFromPath(t *testing.T) {
 		"false",
 	}
 
-	if fmt.Sprintf("%#v", expected) != fmt.Sprintf("%#v", script.commands) {
+	if fmt.Sprintf("%#v", expected) != fmt.Sprintf("%#v", s.commands) {
 		t.Errorf("Unexpected script contents:\n"+
 			"Actual: %#v\n"+
 			"Expected: %#v",
-			script.commands,
+			s.commands,
 			expected)
 	}
 }
 
 func TestScriptFileFrom(t *testing.T) {
 	var existing_script_path string = filepath.Join(TESTDATADIR, "script.sh")
-	script, err := NewScriptFromPath("test", existing_script_path)
+	script, err := NewScriptFromPath(TEST_NAME, existing_script_path, nil)
 	if err != nil {
 		t.Fatalf("Error constructing new script: %s", err.Error())
 	}

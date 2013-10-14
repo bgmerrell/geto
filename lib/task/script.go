@@ -12,22 +12,29 @@ import (
 	"os"
 )
 
+// A script that runs on a target host
 type script_t struct {
+	// Name is the name of a script.  It need not be unique.
 	name     string
+	// The commands that make up a shell-style script.
+	// Each index represents a line in the script.
 	commands []string
+	// The number of scripts of the same name that will run on a target host
+	// concurrently.  A nil value means there is no limit.
+	maxConcurrent *uint32
 }
 
-func NewScript(name string) script_t {
-	return script_t{name, []string{}}
+func NewScript(name string, maxConcurrent *uint32) script_t {
+	return script_t{name, []string{}, maxConcurrent}
 }
 
-func NewScriptWithCommands(name string, commands []string) script_t {
-	return script_t{name, commands}
+func NewScriptWithCommands(name string, commands []string, maxConcurrent *uint32) script_t {
+	return script_t{name, commands, maxConcurrent}
 }
 
 // Takes a name and a path to a shell script and returns a script_t object
-func NewScriptFromPath(name string, path string) (script_t, error) {
-	var s script_t = script_t{name, []string{}}
+func NewScriptFromPath(name string, path string, maxConcurrent *uint32) (script_t, error) {
+	var s script_t = script_t{name, []string{}, maxConcurrent}
 
 	f, err := os.Open(path)
 	if err != nil {

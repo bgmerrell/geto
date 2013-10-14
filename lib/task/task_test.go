@@ -40,7 +40,7 @@ func TestGenTaskId(t *testing.T) {
 }
 
 func TestNewTask(t *testing.T) {
-	var script script_t = NewScript("test")
+	var script script_t = NewScript("test", nil)
 	var depFiles []string
 	var task Task
 	var err error

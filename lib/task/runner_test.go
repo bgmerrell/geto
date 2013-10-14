@@ -18,7 +18,7 @@ func init() {
 }
 
 func TestRunOnRandomHost(t *testing.T) {
-	task := Task{"test-task", []string{}, NewScript("test-script")}
+	task := Task{"test-task", []string{}, NewScript("test-script", nil)}
 	RunOnRandomHost(task)
 }
 
