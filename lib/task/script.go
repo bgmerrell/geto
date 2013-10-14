@@ -15,7 +15,7 @@ import (
 // A script that runs on a target host
 type script_t struct {
 	// Name is the name of a script.  It need not be unique.
-	name     string
+	name string
 	// The commands that make up a shell-style script.
 	// Each index represents a line in the script.
 	commands []string

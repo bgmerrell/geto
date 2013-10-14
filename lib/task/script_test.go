@@ -27,7 +27,6 @@ func TestNewScript(t *testing.T) {
 	}
 }
 
-
 func TestNewScriptFromPath(t *testing.T) {
 	TEST_MAX_CONCURRENT := uint32(100)
 	s, err := NewScriptFromPath(TEST_NAME, filepath.Join(TESTDATADIR, "script.sh"), &TEST_MAX_CONCURRENT)
