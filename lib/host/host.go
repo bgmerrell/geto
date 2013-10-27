@@ -11,6 +11,7 @@ type Host struct {
 	Name     string
 	Addr     string
 	Username string
-	Password *string /* nil means no password */
+	/* nil means no password, as opposed to an empty password */
+	Password *string
 	PortNum  uint16
 }
