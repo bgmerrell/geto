@@ -1,11 +1,10 @@
 package ssh
 
 import (
-	"fmt"
 	"github.com/bgmerrell/geto/lib/config"
 	"github.com/bgmerrell/geto/lib/host"
 	"github.com/bgmerrell/geto/lib/remote"
-	//"github.com/bgmerrell/geto/lib/ssh"
+	"github.com/bgmerrell/geto/lib/ssh"
 )
 
 // remote implements the Remote interface
@@ -16,31 +15,51 @@ func New() remote.Remote {
 }
 
 func (r sshRemote) TestConnection(host host.Host) (err error) {
-	fmt.Println("TODO: test connection")
-	return nil
+	conf := config.GetParsedConfig()
+	return ssh.TestConnection(
+		host.Addr,
+		host.Username,
+		host.Password,
+		conf.PrivKeyPath,
+		host.PortNum)
 }
 
 func (r sshRemote) Run(host host.Host,
 	command string,
 	timeout uint32) (stdout string, stderr string, err error) {
-	c := config.GetParsedConfig()
-	fmt.Println("PrivKeyPath: " + c.PrivKeyPath)
-	fmt.Println("TODO: run")
-	return "", "", nil
+	conf := config.GetParsedConfig()
+	return ssh.Run(
+		host.Addr,
+		host.Username,
+		host.Password,
+		conf.PrivKeyPath,
+		host.PortNum,
+		command,
+		timeout)
 }
 
 func (r sshRemote) CopyTo(host host.Host,
 	recursive bool,
 	localPath string,
 	remotePath string) (err error) {
-	fmt.Println("TODO: copy to")
-	return nil
+	return ssh.ScpTo(
+		host.Addr,
+		host.Username,
+		host.PortNum,
+		recursive,
+		localPath,
+		remotePath)
 }
 
 func (r sshRemote) CopyFrom(host host.Host,
 	recursive bool,
 	remotePath string,
 	localPath string) (err error) {
-	fmt.Println("TODO: copy from")
-	return nil
+	return ssh.ScpFrom(
+		host.Addr,
+		host.Username,
+		host.PortNum,
+		recursive,
+		remotePath,
+		localPath)
 }

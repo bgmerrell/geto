@@ -10,7 +10,6 @@ import (
 	"github.com/bgmerrell/geto/lib/config"
 	"github.com/bgmerrell/geto/lib/ssh"
 	"os"
-	"time"
 )
 
 const SCP_TEST_PATH = "/tmp/geto-scp-test.txt"
