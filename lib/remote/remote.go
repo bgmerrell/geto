@@ -13,7 +13,7 @@ type Remote interface {
 	// Run runs command on the host with the specified timeout (in seconds.
 	//
 	// stdout and stderr strings from running the remote command are
-	// returned.  
+	// returned.
 	//
 	// The returned error is nil if the command runs, has no problems
 	// copying stdin, stdout, and stderr, and exits with a zero exit
