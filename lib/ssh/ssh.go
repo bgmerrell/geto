@@ -20,6 +20,7 @@ import (
 	"io/ioutil"
 	"os/exec"
 	"strconv"
+	"time"
 )
 
 const DEFAULT_SSH_PORT = 22
@@ -134,6 +135,11 @@ func TestConnection(
 	return nil
 }
 
+func handleTimeout() {
+	/* TODO: kill remote process and any other cleanup */
+	fmt.Println("TIMEOUT!")
+}
+
 // The addr parameter is the address (IP, hostname, etc) of the remote host.
 // The username parameter is the username to use to SSH to the remote host.
 // The password parameter is the password to use to SSH to the remote host.
@@ -164,12 +170,25 @@ func Run(
 	session.Stdout = &stdout_buf
 	session.Stderr = &stderr_buf
 
-	if timeout != 0 {
-		// TODO: kill the remote process if there is a timeout
-	}
-
-	if err = session.Run(command); err != nil {
-		return "", "", err
+	if timeout == 0 {
+		if err = session.Run(command); err != nil {
+			return "", "", err
+		}
+	} else {
+		c := make(chan error)
+		var e error
+		go func() {
+			c <- session.Run(command)
+		}()
+		select {
+		case e = <-c:
+			if e == nil {
+				return "", "", err
+			}
+		case <-time.After(time.Duration(timeout) * time.Second):
+			err = errors.New("timeout")
+			handleTimeout()
+		}
 	}
 
 	return stdout_buf.String(), stderr_buf.String(), err

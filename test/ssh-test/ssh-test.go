@@ -10,6 +10,7 @@ import (
 	"github.com/bgmerrell/geto/lib/config"
 	"github.com/bgmerrell/geto/lib/ssh"
 	"os"
+	"time"
 )
 
 const SCP_TEST_PATH = "/tmp/geto-scp-test.txt"
@@ -124,9 +125,9 @@ func testRemoteEcho() {
 
 func testTimeout() {
 	/* All durations in seconds */
-	const sleepDuration = 8
+	const sleepDuration = 60
 	/* padding for things over than the execution of the actual remote sleep */
-	const padDuration = 2
+	const padDuration = 10
 	const timeoutDuration = 3
 
 	var stdout, stderr string
@@ -144,14 +145,16 @@ func testTimeout() {
 			fmt.Sprintf("%s %d", "sleep", sleepDuration),
 			timeoutDuration)
 		elapsed := time.Since(start)
-		if err != nil {
-			fmt.Printf("FAIL (%s)\n", err.Error())
-		} else if elapsed > timeoutDuration+padDuration {
+		if err == nil {
+			fmt.Printf("FAIL (expected timeout error, got nil)\n")
+		} else if elapsed.Seconds() > timeoutDuration+padDuration {
 			fmt.Printf("FAIL (took %.1f seconds, expected < %d)\n",
 				elapsed.Seconds(),
 				timeoutDuration+padDuration)
-		} else if stdout == "" && stderr == "" {
+		} else if err.Error() == "timeout" {
 			fmt.Printf("PASS\n")
+		} else if err != nil {
+			fmt.Printf("FAIL (expected error: %s)", err.Error())
 		} else {
 			fmt.Printf("FAIL (stdout: %s, stderr: %s)\n", stdout, stderr)
 		}
