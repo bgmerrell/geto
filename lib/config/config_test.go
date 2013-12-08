@@ -106,7 +106,7 @@ func TestParseRemoteWorkPath(t *testing.T) {
 }
 
 func TestParseLocalWorkPath(t *testing.T) {
-	expected := "/tmp/geto"
+	expected := "/var/tmp/geto"
 	actual := conf.LocalWorkPath
 	if expected != actual {
 		t.Errorf("Local work path (%s) does not match expected (%s)",

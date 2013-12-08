@@ -53,18 +53,3 @@ func NewScriptFromPath(name string, path string, maxConcurrent *uint32) (script_
 	}
 	return s, err
 }
-
-// Creates a file from a script object.
-// The desired file path is provided by the user and the file is overwritten if it already exists.
-func (s *script_t) ToFile(path string) error {
-	f, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	for _, c := range s.commands {
-		f.Write([]byte(c + "\n"))
-	}
-	return nil
-}

@@ -5,6 +5,9 @@
 package task
 
 import (
+	"fmt"
+	"io/ioutil"
+	"path/filepath"
 	"regexp"
 	"testing"
 )
@@ -51,5 +54,45 @@ func TestNewTask(t *testing.T) {
 		t.Errorf("Task ID %s did not match expected pattern of %s",
 			task.Id,
 			expectedPattern)
+	}
+}
+
+func TestTaskToFile(t *testing.T) {
+	var depFiles []string
+	var existing_script_path string = filepath.Join(TESTDATADIR, "script.sh")
+	var task Task
+	script, err := NewScriptFromPath(TEST_NAME, existing_script_path, nil)
+	if err != nil {
+		t.Fatalf("Error constructing new script: %s", err.Error())
+	}
+
+	if task, err = NewTask(depFiles, script); err != nil {
+		t.Fatalf("Failed to create new Task: " + err.Error())
+	}
+
+	taskFilePath, err := task.ToFile()
+	if err != nil {
+		t.Fatalf("Failed to create file from Task: " + err.Error())
+	}
+	fmt.Println(taskFilePath)
+
+	expected, err := ioutil.ReadFile(taskFilePath)
+	if err != nil {
+		t.Fatal("Failed to read temporary script file: %s", err.Error())
+	}
+	actual, err := ioutil.ReadFile(existing_script_path)
+	if err != nil {
+		t.Fatal("Failed to read existing script file: %s", err.Error())
+	}
+	if fmt.Sprintf("%#v", string(expected)) != fmt.Sprintf("%#v", string(actual)) {
+		t.Errorf("Unexpected script file contents:\n"+
+			"Actual:\n"+
+			"---------\n"+
+			"%s"+
+			"\nExpected:\n"+
+			"---------\n"+
+			"%s",
+			string(actual),
+			string(expected))
 	}
 }

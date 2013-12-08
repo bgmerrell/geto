@@ -6,8 +6,6 @@ package task
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
 	"path/filepath"
 	"testing"
 )
@@ -55,41 +53,5 @@ func TestNewScriptFromPath(t *testing.T) {
 			"Expected: %#v",
 			s.commands,
 			expected)
-	}
-}
-
-func TestScriptFileFrom(t *testing.T) {
-	var existing_script_path string = filepath.Join(TESTDATADIR, "script.sh")
-	script, err := NewScriptFromPath(TEST_NAME, existing_script_path, nil)
-	if err != nil {
-		t.Fatalf("Error constructing new script: %s", err.Error())
-	}
-	temp_f, err := ioutil.TempFile("", "geto-test")
-	if err != nil {
-		t.Fatal("Failed to open temporary file: %s", err.Error())
-	}
-	temp_f.Close()
-	defer os.Remove(temp_f.Name())
-
-	script.ToFile(temp_f.Name())
-
-	expected, err := ioutil.ReadFile(temp_f.Name())
-	if err != nil {
-		t.Fatal("Failed to read temporary script file: %s", err.Error())
-	}
-	actual, err := ioutil.ReadFile(existing_script_path)
-	if err != nil {
-		t.Fatal("Failed to read existing script file: %s", err.Error())
-	}
-	if fmt.Sprintf("%#v", string(expected)) != fmt.Sprintf("%#v", string(actual)) {
-		t.Errorf("Unexpected script file contents:\n"+
-			"Actual:\n"+
-			"---------\n"+
-			"%s"+
-			"\nExpected:\n"+
-			"---------\n"+
-			"%s",
-			string(actual),
-			string(expected))
 	}
 }

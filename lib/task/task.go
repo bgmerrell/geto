@@ -10,7 +10,9 @@ package task
 import (
 	"errors"
 	"fmt"
+	"github.com/bgmerrell/geto/lib/config"
 	"os"
+	"path/filepath"
 )
 
 type Task struct {
@@ -44,4 +46,28 @@ func genTaskId() (string, error) {
 	f.Close()
 	uuid := fmt.Sprintf("%x-%x-%x-%x", b[0:2], b[2:4], b[4:6], b[6:8])
 	return uuid, nil
+}
+
+// Creates a file from a task object.
+// The path to the created file is returned
+// If there is a problem a non-nil error is returned
+func (t *Task) ToFile() (path string, err error) {
+	c := config.GetParsedConfig()
+	path = filepath.Join(
+		c.LocalWorkPath,
+		fmt.Sprintf("%s_%s", t.Id, t.Script.name))
+
+	f, err := os.Create(path)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	for _, c := range t.Script.commands {
+		_, err := f.Write([]byte(c + "\n"))
+		if err != nil {
+			return "", err
+		}
+	}
+	return path, nil
 }
