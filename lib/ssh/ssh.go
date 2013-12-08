@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"os/exec"
 	"strconv"
 	"time"
@@ -135,9 +136,35 @@ func TestConnection(
 	return nil
 }
 
-func handleTimeout() {
-	/* TODO: kill remote process and any other cleanup */
-	fmt.Println("TIMEOUT!")
+// Connect to the remote host and attempt to kill -9 the process that timed out
+// The addr parameter is the address (IP, hostname, etc) of the remote host.
+// The username parameter is the username to use to SSH to the remote host.
+// The password parameter is the password to use to SSH to the remote host.
+// The privKeyPath parameter is the path to the private key of the master.
+// The portNum parameter is the SSH port number of the remote host.
+// The command parameter is the command that timed out on the remote host.
+func handleTimeout(
+	addr string,
+	username string,
+	password *string,
+	privKeyPath string,
+	portNum uint16,
+	expiredCmd string) (stdout string, stderr string, err error) {
+
+	// TODO: perhaps be a bit more diplomatic in the future by trying
+	// -TERM (instead of -9) first?
+	// The negation of the PID is important, see kill(1)
+	killCmd := fmt.Sprintf("kill -9 -$(pgrep -f \"%s\")", expiredCmd)
+
+	session, err := getSession(addr, username, password, privKeyPath, portNum)
+	if err != nil {
+		log.Printf("Failed to connect for cleanup after timeout: %s", err.Error())
+		return
+	}
+	defer session.Close()
+
+	session.Run(killCmd)
+	return
 }
 
 // The addr parameter is the address (IP, hostname, etc) of the remote host.
@@ -187,7 +214,13 @@ func Run(
 			}
 		case <-time.After(time.Duration(timeout) * time.Second):
 			err = errors.New("timeout")
-			handleTimeout()
+			defer handleTimeout(
+				addr,
+				username,
+				password,
+				privKeyPath,
+				portNum,
+				command)
 		}
 	}
 
