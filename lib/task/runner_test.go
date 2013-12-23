@@ -7,6 +7,7 @@ package task
 import (
 	"fmt"
 	"github.com/bgmerrell/geto/lib/config"
+	"github.com/bgmerrell/geto/lib/remote/dummy"
 	"sort"
 	"testing"
 )
@@ -18,8 +19,9 @@ func init() {
 }
 
 func TestRunOnRandomHost(t *testing.T) {
-	task := Task{"test-task", []string{}, NewScript("test-script", nil)}
-	RunOnRandomHost(task)
+	dummyConn := dummy.New()
+	task := Task{"test-task", []string{}, NewScript("test-script", nil), 0}
+	RunOnRandomHost(dummyConn, task)
 }
 
 func TestGetRandomHost(t *testing.T) {

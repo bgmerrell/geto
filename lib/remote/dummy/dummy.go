@@ -6,7 +6,7 @@ import (
 	"github.com/bgmerrell/geto/lib/remote"
 )
 
-// remote implements the Remote interface
+// dummyRemote implements the Remote interface
 type dummyRemote struct{}
 
 func New() remote.Remote {

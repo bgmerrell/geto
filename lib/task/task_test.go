@@ -7,6 +7,7 @@ package task
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"testing"
@@ -47,7 +48,7 @@ func TestNewTask(t *testing.T) {
 	var depFiles []string
 	var task Task
 	var err error
-	if task, err = NewTask(depFiles, script); err != nil {
+	if task, err = NewTask(depFiles, script, 0); err != nil {
 		t.Fatalf("Failed to create new Task: " + err.Error())
 	}
 	if !validId.MatchString(task.Id) {
@@ -57,8 +58,8 @@ func TestNewTask(t *testing.T) {
 	}
 }
 
-func TestTaskToFile(t *testing.T) {
-	var depFiles []string
+func TestTaskCreateDir(t *testing.T) {
+	var depFiles []string = []string{"/bin/sh"}
 	var existing_script_path string = filepath.Join(TESTDATADIR, "script.sh")
 	var task Task
 	script, err := NewScriptFromPath(TEST_NAME, existing_script_path, nil)
@@ -66,17 +67,19 @@ func TestTaskToFile(t *testing.T) {
 		t.Fatalf("Error constructing new script: %s", err.Error())
 	}
 
-	if task, err = NewTask(depFiles, script); err != nil {
+	if task, err = NewTask(depFiles, script, 0); err != nil {
 		t.Fatalf("Failed to create new Task: " + err.Error())
 	}
 
-	taskFilePath, err := task.ToFile()
+	taskDirPath, err := task.CreateDir()
 	if err != nil {
-		t.Fatalf("Failed to create file from Task: " + err.Error())
+		t.Fatalf("Failed to create directory from Task: " + err.Error())
 	}
-	fmt.Println(taskFilePath)
 
-	expected, err := ioutil.ReadFile(taskFilePath)
+	scriptFilePath := filepath.Join(
+		taskDirPath,
+		fmt.Sprintf("%s_%s", task.Id, task.Script.name))
+	expected, err := ioutil.ReadFile(scriptFilePath)
 	if err != nil {
 		t.Fatal("Failed to read temporary script file: %s", err.Error())
 	}
@@ -94,5 +97,12 @@ func TestTaskToFile(t *testing.T) {
 			"%s",
 			string(actual),
 			string(expected))
+	}
+
+	// Try opening a file dependency to test that it was copied as expected
+	expectedPath := filepath.Join(taskDirPath, "DEPS", "sh")
+	_, err = os.Open(expectedPath)
+	if err != nil {
+		t.Errorf("Missing %s", expectedPath)
 	}
 }
