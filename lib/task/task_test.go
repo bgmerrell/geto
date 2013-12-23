@@ -101,7 +101,8 @@ func TestTaskCreateDir(t *testing.T) {
 
 	// Try opening a file dependency to test that it was copied as expected
 	expectedPath := filepath.Join(taskDirPath, "DEPS", "sh")
-	_, err = os.Open(expectedPath)
+	f, err := os.Open(expectedPath)
+	f.Close()
 	if err != nil {
 		t.Errorf("Missing %s", expectedPath)
 	}

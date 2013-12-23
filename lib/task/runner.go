@@ -26,8 +26,8 @@ func RunOnHost(conn remote.Remote, task Task, host host.Host) (stdout string, st
 	if _, err := task.CreateDir(); err != nil {
 		return "", "", err
 	}
-	// TODO: copy the created task dir (above) to the host and then 
-	// execute the script!	
+	// TODO: copy the created task dir (above) to the host and then
+	// execute the script!
 	return conn.Run(
 		host,
 		"sleep 10",

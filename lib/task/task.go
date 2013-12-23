@@ -9,24 +9,24 @@ package task
 
 import (
 	"errors"
-	"os/exec"
 	"fmt"
 	"github.com/bgmerrell/geto/lib/config"
 	"os"
+	"os/exec"
 	"path/filepath"
 )
 
 // A task that runs on a target host
 type Task struct {
 	// A unique ID for the task
-	Id       string
+	Id string
 	// A list of files and/or directories that the task requires
 	DepFiles []string
 	// A script for the task to run
-	Script   script_t
+	Script script_t
 	// The number of seconds before giving up on a task after it has been
 	// started
-	Timeout  uint32
+	Timeout uint32
 }
 
 func NewTask(depFiles []string, script script_t, timeout uint32) (Task, error) {
