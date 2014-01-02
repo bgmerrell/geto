@@ -23,13 +23,13 @@ type Task struct {
 	// A list of files and/or directories that the task requires
 	DepFiles []string
 	// A script for the task to run
-	Script script_t
+	Script Script
 	// The number of seconds before giving up on a task after it has been
 	// started
 	Timeout uint32
 }
 
-func NewTask(depFiles []string, script script_t, timeout uint32) (Task, error) {
+func New(depFiles []string, script Script, timeout uint32) (Task, error) {
 	taskId, err := genTaskId()
 	return Task{taskId, depFiles, script, timeout}, err
 }
@@ -56,6 +56,15 @@ func genTaskId() (string, error) {
 	return uuid, nil
 }
 
+// Return the script filename
+// The script filename is the task ID combined with the script name.
+func (t *Task) getRemoteScriptPath() (path string) {
+	c := config.GetParsedConfig()
+	remoteDirPath := filepath.Join(c.RemoteWorkPath, t.Id)
+	return filepath.Join(
+		remoteDirPath, fmt.Sprintf("%s_%s", t.Id, t.Script.name))
+}
+
 // Creates a directory from a task object.
 // The directory contains everything needed to run the task (e.g., required
 // files and the script to run).
@@ -73,11 +82,10 @@ func (t *Task) CreateDir() (path string, err error) {
 			"Failed to create task directory: %s", err.Error()))
 	}
 
-	// The script name is the task ID combined with the script name.
 	scriptFilePath := filepath.Join(
 		taskDirPath,
 		fmt.Sprintf("%s_%s", t.Id, t.Script.name))
-	f, err := os.Create(scriptFilePath)
+	f, err := os.OpenFile(scriptFilePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0700)
 	defer f.Close()
 	if err != nil {
 		return "", errors.New(fmt.Sprintf(

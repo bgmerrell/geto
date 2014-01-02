@@ -44,11 +44,11 @@ func TestGenTaskId(t *testing.T) {
 }
 
 func TestNewTask(t *testing.T) {
-	var script script_t = NewScript("test", nil)
+	var script Script = NewScript("test", nil)
 	var depFiles []string
 	var task Task
 	var err error
-	if task, err = NewTask(depFiles, script, 0); err != nil {
+	if task, err = New(depFiles, script, 0); err != nil {
 		t.Fatalf("Failed to create new Task: " + err.Error())
 	}
 	if !validId.MatchString(task.Id) {
@@ -67,7 +67,7 @@ func TestTaskCreateDir(t *testing.T) {
 		t.Fatalf("Error constructing new script: %s", err.Error())
 	}
 
-	if task, err = NewTask(depFiles, script, 0); err != nil {
+	if task, err = New(depFiles, script, 0); err != nil {
 		t.Fatalf("Failed to create new Task: " + err.Error())
 	}
 

@@ -14,7 +14,7 @@ const TESTDATADIR = "../../test/data"
 const TEST_NAME = "test"
 
 func TestNewScript(t *testing.T) {
-	var s script_t = NewScript(TEST_NAME, nil)
+	var s Script = NewScript(TEST_NAME, nil)
 	if s.name != TEST_NAME {
 		t.Errorf(fmt.Sprintf(
 			"Error constructing new script: Expected name \"%s\", got \"%s\"", TEST_NAME, s.name))

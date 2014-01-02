@@ -23,14 +23,28 @@ func init() {
 
 func RunOnHost(conn remote.Remote, task Task, host host.Host) (stdout string, stderr string, err error) {
 	log.Printf("Running task %s on host %s (%s)...", task.Id, host.Name, host.Addr)
-	if _, err := task.CreateDir(); err != nil {
+	c := config.GetParsedConfig()
+	taskDirPath, err := task.CreateDir()
+	if err != nil {
 		return "", "", err
 	}
-	// TODO: copy the created task dir (above) to the host and then
-	// execute the script!
+
+	// Create the remote work path on the target host in case it hasn't
+	// been corrected yet.  Is there a better way to do this?  It would be
+	// nice to not have this extra ssh session and command for every run.
+	_, stderr, err = conn.Run(
+		host,
+		fmt.Sprintf("mkdir -p %s", c.RemoteWorkPath),
+		0)
+	if err != nil {
+		log.Printf("Failed to create remote work directory, %s: (%s)",
+			c.RemoteWorkPath,
+			err.Error())
+	}
+	conn.CopyTo(host, true, taskDirPath, c.RemoteWorkPath)
 	return conn.Run(
 		host,
-		"sleep 10",
+		task.getRemoteScriptPath(),
 		task.Timeout)
 }
 
