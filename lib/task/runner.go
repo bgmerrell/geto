@@ -67,11 +67,21 @@ func getWrapperTask(innerTask Task) (wrapperTask Task, err error) {
 	stdoutPath := filepath.Join(remoteInnerTaskDirPath, "stdout")
 	stderrPath := filepath.Join(remoteInnerTaskDirPath, "stderr")
 	c := config.GetParsedConfig()
+	var timeoutString string
+	if innerTask.Timeout > 0 {
+		timeoutString = fmt.Sprintf("%ss", innerTask.Timeout)
+	} else {
+		timeoutString = "3650d" // effectively no timeout
+	}
 	wrapperScript := NewScriptWithCommands(
 		"wrapper",
 		[]string{
 			"#!/bin/bash",
-			fmt.Sprintf("%s 1>%s 2>%s &",
+			// TODO: Make `timeout` configurable.  E.g., Mac OS X
+			// with homebrew installed coreutils will have
+			// a `gtimeout`.
+			fmt.Sprintf("timeout --kill-after=10 %s %s 1>%s 2>%s &",
+				timeoutString,
 				innerTask.getRemoteScriptPath(),
 				stdoutPath,
 				stderrPath),
@@ -99,10 +109,23 @@ func RunOnHost(conn remote.Remote, task Task, host host.Host) (stdout string, st
 
 	conn.CopyTo(host, true, taskDirPath, c.RemoteWorkPath)
 
+	wrapperTask, err := getWrapperTask(task)
+	if err != nil {
+		return "", stderr, err
+	}
+
+	log.Printf("Wrapper task: %s", wrapperTask.Id)
+	wrapperTaskDirPath, err := wrapperTask.CreateDir()
+	if err != nil {
+		return "", "", err
+	}
+
+	conn.CopyTo(host, true, wrapperTaskDirPath, c.RemoteWorkPath)
+
 	return conn.Run(
 		host,
-		task.getRemoteScriptPath(),
-		task.Timeout)
+		wrapperTask.getRemoteScriptPath(),
+		wrapperTask.Timeout)
 }
 
 func RunOnHostBalancedByScriptName(conn remote.Remote, task Task) {
