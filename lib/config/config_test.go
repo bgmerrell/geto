@@ -74,6 +74,19 @@ func TestParseMissingConfig(t *testing.T) {
 	}
 }
 
+func TestParseConfigWithNoRemoteLockPath(t *testing.T) {
+	if _, err = ParseConfig("../../test/data/config-no-remote-lock-path.ini"); err == nil {
+		t.Errorf("Parsing a config with no remote lock path should fail")
+		return
+	}
+	if err.Error() != "option not found: remote_lock_path" {
+		t.Errorf("Expected to fail for missing work paths")
+	}
+}
+
+// Parse all the invalid config files before this point.  After we parse the
+// good config file, the rest of the tests assume having a good, populated
+// Config object.
 func TestParseConfigPath(t *testing.T) {
 	if conf, err = ParseConfig("../../test/data/geto.ini"); err != nil {
 		t.Fatalf("Parse of good config should pass.")
@@ -159,5 +172,14 @@ func TestParseConfigPorts(t *testing.T) {
 				host.Name,
 				strconv.FormatUint(uint64(host.PortNum), 10))
 		}
+	}
+}
+
+func TestParseRemoteLockPath(t *testing.T) {
+	expected := "/var/tmp/geto_lock"
+	actual := conf.RemoteLockPath
+	if expected != actual {
+		t.Errorf("Remote lock path (%s) does not match expected (%s)",
+			actual, expected)
 	}
 }

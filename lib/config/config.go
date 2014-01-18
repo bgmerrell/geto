@@ -29,6 +29,7 @@ type Config struct {
 	PrivKeyPath    string
 	RemoteWorkPath string
 	LocalWorkPath  string
+	RemoteLockPath string
 	Hosts          []host.Host
 }
 
@@ -64,6 +65,11 @@ func ParseConfig(configPath string) (Config, error) {
 
 	if conf.LocalWorkPath, err = c.String("geto", "local_work_path"); err != nil {
 		log.Print("Failed to parse local work path: ", err.Error())
+		return conf, err
+	}
+
+	if conf.RemoteLockPath, err = c.String("geto", "remote_lock_path"); err != nil {
+		log.Print("Failed to parse remote lock path: ", err.Error())
 		return conf, err
 	}
 

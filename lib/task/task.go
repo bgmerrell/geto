@@ -58,11 +58,16 @@ func genTaskId() (string, error) {
 
 // Return the script filename
 // The script filename is the task ID combined with the script name.
-func (t *Task) getRemoteScriptPath() (path string) {
+func (t *Task) getRemoteDirPath() (path string) {
 	c := config.GetParsedConfig()
-	remoteDirPath := filepath.Join(c.RemoteWorkPath, t.Id)
+	return filepath.Join(c.RemoteWorkPath, t.Id)
+}
+
+// Return the script filename
+// The script filename is the task ID combined with the script name.
+func (t *Task) getRemoteScriptPath() (path string) {
 	return filepath.Join(
-		remoteDirPath, fmt.Sprintf("%s_%s", t.Id, t.Script.name))
+		t.getRemoteDirPath(), fmt.Sprintf("%s_%s", t.Id, t.Script.name))
 }
 
 // Creates a directory from a task object.
