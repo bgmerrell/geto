@@ -21,7 +21,9 @@ func init() {
 func TestRunOnRandomHost(t *testing.T) {
 	dummyConn := dummy.New()
 	task := Task{"test-task", []string{}, NewScript("test-script", nil), 0}
-	RunOnRandomHost(dummyConn, task)
+	ch := make(chan RunOutput)
+	go RunOnRandomHost(dummyConn, task, ch)
+	_ = <-ch
 }
 
 func TestGetRandomHost(t *testing.T) {

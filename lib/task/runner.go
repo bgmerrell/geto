@@ -16,6 +16,8 @@ import (
 	"log"
 	"math/rand"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -23,15 +25,22 @@ func init() {
 	rand.Seed(time.Now().UTC().UnixNano())
 }
 
+type RunOutput struct {
+	Stdout string
+	Stderr string
+	Err error
+}
+
+// Acquire a remote lock by creating a remote directory that acts as a lock.
+// IMPORTANT: This assumes mkdir is atomic on the target filesystem
 func acquireRemoteRunnerLock(conn remote.Remote, host host.Host) (stderr string, err error) {
 	const RETRIES = 10
 	const SLEEP_INTERVAL = 0.1
-	// TODO: put LOCK_DIR in the config file
-	const LOCK_DIR = "/var/tmp/geto_lock"
+	c := config.GetParsedConfig()
 	for i := 0; i < RETRIES; i++ {
 		_, stderr, err = conn.Run(
 			host,
-			fmt.Sprintf("mkdir %s", LOCK_DIR),
+			fmt.Sprintf("mkdir %s", c.RemoteLockPath),
 			0)
 		if err == nil {
 			break
@@ -42,6 +51,29 @@ func acquireRemoteRunnerLock(conn remote.Remote, host host.Host) (stderr string,
 	}
 
 	return stderr, err
+}
+
+// Remove the remote runner lock from the master side.  This is only to be
+// used when an error is encountered that prevents the task script from being
+// executed on the target and the lock has already been acquired.
+func removeRemoteRunnerLock(conn remote.Remote, host host.Host) {
+	const RETRIES = 20
+	const SLEEP_INTERVAL = 0.1
+	c := config.GetParsedConfig()
+	var err error
+	for i := 0; i < RETRIES; i++ {
+		_, _, err = conn.Run(
+			host,
+			fmt.Sprintf("rm -r %s", c.RemoteLockPath),
+			0)
+		if err == nil {
+			log.Printf("Remote lock removed")
+			break
+		}
+	}
+	if err != nil {
+		log.Printf("Failed to remove remote lock: %s", err.Error())
+	}
 }
 
 func createRemoteWorkPathDir(conn remote.Remote, host host.Host) (stderr string, err error) {
@@ -90,50 +122,92 @@ func getWrapperTask(innerTask Task) (wrapperTask Task, err error) {
 	return New([]string{}, wrapperScript, 0)
 }
 
-func RunOnHost(conn remote.Remote, task Task, host host.Host) (stdout string, stderr string, err error) {
+// Run a task on a target host
+func RunOnHost(conn remote.Remote, task Task, host host.Host, ch chan<- RunOutput) {
 	log.Printf("Running task %s on host %s (%s)...", task.Id, host.Name, host.Addr)
+
+	// TODO: Better handle removeRemoteRunnerLock failures!
+
 	c := config.GetParsedConfig()
 	taskDirPath, err := task.CreateDir()
 	if err != nil {
-		return "", "", err
+		ch <- RunOutput{"", "", err}
+		return
 	}
 
-	if stderr, err = acquireRemoteRunnerLock(conn, host); err != nil {
-		return "", stderr, errors.New(
-			"Failed to acquire remote lock: " + err.Error())
+	// Acquire the remote lock; if we fail after this, we need to make
+	// sure the remote lock is removed.
+	if stderr, err := acquireRemoteRunnerLock(conn, host); err != nil {
+		ch <- RunOutput{"", stderr, err}
+		return
+	} else {
+		log.Printf("%s acquired remote lock", task.Id)
 	}
 
-	if stderr, err = createRemoteWorkPathDir(conn, host); err != nil {
-		return "", stderr, err
+	if task.Script.maxConcurrent != nil {
+		// ^ is used to avoid matching the wrapper timeout process
+		var pgrepPattern = fmt.Sprintf(
+			"^/bin/bash %s/.*_%s", c.RemoteWorkPath, task.Script.name)
+		stdout, _, err := conn.Run(
+			host,
+			// pgrep -c returns 1 if the count is zero (which
+			// seems silly); we append the "; true" to work around
+			// this.
+			fmt.Sprintf("pgrep -c -f \"%s\"; true", pgrepPattern),
+			0)
+		nRunningScripts, err := strconv.ParseUint(
+			strings.TrimSpace(stdout), 10, 32)
+		if err != nil  {
+			removeRemoteRunnerLock(conn, host)
+			ch <- RunOutput{"", "", errors.New("Failed to parse pgrep output: " + err.Error())}
+			return
+		}
+		if uint32(nRunningScripts) >= *task.Script.maxConcurrent {
+			removeRemoteRunnerLock(conn, host)
+			ch <- RunOutput{"", "", errors.New(fmt.Sprintf(
+				"Max concurrent (%d) \"%s\" scripts already running",
+				nRunningScripts, task.Script.name))}
+			return
+		}
+	}
+
+	stderr, err := createRemoteWorkPathDir(conn, host)
+	if err != nil {
+		ch <- RunOutput{"", stderr, err}
+		removeRemoteRunnerLock(conn, host)
+		return
 	}
 
 	conn.CopyTo(host, true, taskDirPath, c.RemoteWorkPath)
 
 	wrapperTask, err := getWrapperTask(task)
 	if err != nil {
-		return "", stderr, err
+		removeRemoteRunnerLock(conn, host)
+		ch <- RunOutput{"", stderr, err}
+		return
 	}
 
 	log.Printf("Wrapper task: %s", wrapperTask.Id)
 	wrapperTaskDirPath, err := wrapperTask.CreateDir()
 	if err != nil {
-		return "", "", err
+		removeRemoteRunnerLock(conn, host)
+		ch <- RunOutput{"", "", err}
+		return
 	}
 
 	conn.CopyTo(host, true, wrapperTaskDirPath, c.RemoteWorkPath)
 
-	return conn.Run(
-		host,
-		wrapperTask.getRemoteScriptPath(),
-		wrapperTask.Timeout)
+	stdout, stderr, err := conn.Run(
+		host, wrapperTask.getRemoteScriptPath(), wrapperTask.Timeout)
+	ch <- RunOutput{stdout, stderr, err}
 }
 
 func RunOnHostBalancedByScriptName(conn remote.Remote, task Task) {
 	fmt.Println("TODO: Try to find the host running the fewest scripts of the same name.")
 }
 
-func RunOnRandomHost(conn remote.Remote, task Task) (stdout string, stderr string, err error) {
-	return RunOnHost(conn, task, getRandomHost())
+func RunOnRandomHost(conn remote.Remote, task Task, ch chan<- RunOutput) {
+	RunOnHost(conn, task, getRandomHost(), ch)
 }
 
 func getRandomHost() host.Host {

@@ -52,7 +52,9 @@ func genTaskId() (string, error) {
 			"%sRead %d bytes, expected %d", failPrefix, count, numBytes))
 	}
 	f.Close()
+
 	uuid := fmt.Sprintf("%x-%x-%x-%x", b[0:2], b[2:4], b[4:6], b[6:8])
+
 	return uuid, nil
 }
 
@@ -66,6 +68,8 @@ func (t *Task) getRemoteDirPath() (path string) {
 // Return the script filename
 // The script filename is the task ID combined with the script name.
 func (t *Task) getRemoteScriptPath() (path string) {
+	// If this changes, we may need to update any pattern matchting we do
+	// to do pattern-based matching on remote processes.
 	return filepath.Join(
 		t.getRemoteDirPath(), fmt.Sprintf("%s_%s", t.Id, t.Script.name))
 }
