@@ -28,7 +28,7 @@ func init() {
 type RunOutput struct {
 	Stdout string
 	Stderr string
-	Err error
+	Err    error
 }
 
 // Acquire a remote lock by creating a remote directory that acts as a lock.
@@ -157,7 +157,7 @@ func RunOnHost(conn remote.Remote, task Task, host host.Host, ch chan<- RunOutpu
 			0)
 		nRunningScripts, err := strconv.ParseUint(
 			strings.TrimSpace(stdout), 10, 32)
-		if err != nil  {
+		if err != nil {
 			removeRemoteRunnerLock(conn, host)
 			ch <- RunOutput{"", "", errors.New("Failed to parse pgrep output: " + err.Error())}
 			return
