@@ -109,9 +109,8 @@ func getWrapperTask(innerTask Task) (wrapperTask Task, err error) {
 		"wrapper",
 		[]string{
 			"#!/bin/bash",
-			// TODO: Make `timeout` configurable.  E.g., Mac OS X
-			// with homebrew installed coreutils will have
-			// a `gtimeout`.
+			// It would be nice to not have the "timeout"
+			// dependency.
 			fmt.Sprintf("timeout --kill-after=10 %s %s 1>%s 2>%s &",
 				timeoutString,
 				innerTask.getRemoteScriptPath(),
@@ -126,7 +125,11 @@ func getWrapperTask(innerTask Task) (wrapperTask Task, err error) {
 func RunOnHost(conn remote.Remote, task Task, host host.Host, ch chan<- RunOutput) {
 	log.Printf("Running task %s on host %s (%s)...", task.Id, host.Name, host.Addr)
 
-	// TODO: Better handle removeRemoteRunnerLock failures!
+	// TODO: Better handle removeRemoteRunnerLock failures!  It might be
+	// a problem that we just log a message when such a failure occurs,
+	// since it means the user will have to go in and delete the lock
+	// manually.  In generally, this code could probably benefit from more
+	// specific types of errors.
 
 	c := config.GetParsedConfig()
 	taskDirPath, err := task.CreateDir()
