@@ -32,7 +32,7 @@ type RunOutput struct {
 }
 
 type NRunningScriptsOutput struct {
-	n uint32 // The number of running scripts on the target
+	n   uint32 // The number of running scripts on the target
 	err error
 }
 
@@ -142,7 +142,6 @@ func getRemoteNRunningScripts(conn remote.Remote, task Task, host host.Host, ch 
 	ch <- NRunningScriptsOutput{uint32(n), err}
 }
 
-
 // Run a task on a target host
 func RunOnHost(conn remote.Remote, task Task, host host.Host, resultChan chan<- RunOutput) {
 	log.Printf("Running task %s on host %s (%s)...", task.Id, host.Name, host.Addr)
@@ -215,6 +214,47 @@ func RunOnHost(conn remote.Remote, task Task, host host.Host, resultChan chan<- 
 	stdout, stderr, err := conn.Run(
 		host, wrapperTask.getRemoteScriptPath(), wrapperTask.Timeout)
 	resultChan <- RunOutput{stdout, stderr, err}
+}
+
+func RunOnHostBalancedByScriptName(conn remote.Remote, task Task, ch chan<- RunOutput) {
+	c := config.GetParsedConfig()
+	hostToChan := map[host.Host](chan NRunningScriptsOutput){}
+	var bestHost host.Host
+	var minScriptsRunning uint32
+	var failure error = nil
+	for _, host := range c.Hosts {
+		log.Printf("candidate: %s\n", host.Name)
+	}
+	for _, host := range c.Hosts {
+		hostToChan[host] = make(chan NRunningScriptsOutput)
+		host := host // new instance for go routine
+		go func() {
+			if _, err := acquireRemoteRunnerLock(conn, host); err != nil {
+				log.Printf("%s acquired remote lock", task.Id)
+			}
+			go getRemoteNRunningScripts(conn, task, host, hostToChan[host])
+		}()
+	}
+	for host, _ := range hostToChan {
+		nRunningScriptsOutput := <-hostToChan[host]
+		if nRunningScriptsOutput.err != nil {
+			failure = nRunningScriptsOutput.err
+		}
+		log.Printf("%d scripts running on %s\n", nRunningScriptsOutput.n, host.Name)
+		if nRunningScriptsOutput.n < minScriptsRunning || bestHost.Name == "" {
+			bestHost = host
+			minScriptsRunning = nRunningScriptsOutput.n
+		}
+		// TODO: parallelize lock removals
+		removeRemoteRunnerLock(conn, host)
+	}
+
+	if failure != nil {
+		ch <- RunOutput{"", "", errors.New("Failed : " + failure.Error())}
+	} else {
+		log.Printf("Selected host \"%s\" for load balancing", bestHost.Name)
+		RunOnHost(conn, task, bestHost, ch)
+	}
 }
 
 func RunOnRandomHost(conn remote.Remote, task Task, ch chan<- RunOutput) {

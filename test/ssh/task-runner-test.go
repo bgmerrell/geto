@@ -96,6 +96,52 @@ func testMaxConcurrentSleepTasks() {
 	}
 }
 
+func testRunOnHostBalancedByScriptName() {
+	/* Multiple hosts required for this test */
+	if len(conf.Hosts) < 2 {
+		fmt.Printf("Skipping load balance by script name test (not enough hosts)...\n")
+		return
+	}
+
+	fmt.Printf("Running load balance by script name test...\n")
+	maxConcurrent := uint32(3)
+	var script task.Script = task.NewScriptWithCommands(
+		"sleep", []string{"#!/bin/bash", "sleep 20"}, &maxConcurrent)
+	var depFiles []string
+	var err error
+
+	/* Set up tasks */
+	t1, err := task.New(depFiles, script, 0)
+	t2, err := task.New(depFiles, script, 0)
+	t3, err := task.New(depFiles, script, 0)
+	t4, err := task.New(depFiles, script, 0)
+	if err != nil {
+		fmt.Printf("FAIL (failed to create task(s))\n")
+		return
+	}
+
+	/* Set up channels */
+	c1 := make(chan task.RunOutput)
+	c2 := make(chan task.RunOutput)
+	c3 := make(chan task.RunOutput)
+	c4 := make(chan task.RunOutput)
+
+	go task.RunOnHost(ssh.New(), t1, testHost, c1)
+	go task.RunOnHost(ssh.New(), t2, testHost, c2)
+	go task.RunOnHost(ssh.New(), t3, testHost, c3)
+
+	<-c1
+	<-c2
+	<-c3
+
+	/* Now run on host balanced by script name */
+	go task.RunOnHostBalancedByScriptName(ssh.New(), t4, c4)
+
+	<-c4
+
+	// TODO: Fail the test if the correct server wasn't picked
+}
+
 func main() {
 	parseCommandLine()
 	var err error
@@ -111,4 +157,5 @@ func main() {
 	testEchoTask()
 	fmt.Println("")
 	testMaxConcurrentSleepTasks()
+	testRunOnHostBalancedByScriptName()
 }

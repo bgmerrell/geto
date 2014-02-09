@@ -27,7 +27,7 @@ func TestRunOnRandomHost(t *testing.T) {
 }
 
 func TestGetRandomHost(t *testing.T) {
-	m := make(map[string]struct{})
+	m := map[string]struct{}{}
 	c := config.GetParsedConfig()
 	const TRIES = 100
 	for i := 0; i < TRIES; i++ {
@@ -55,4 +55,12 @@ func TestGetRandomHost(t *testing.T) {
 			actual,
 			expected)
 	}
+}
+
+func TestRunOnHostBalancedByScript(t *testing.T) {
+	dummyConn := dummy.New()
+	task := Task{"test-task", []string{}, NewScript("test-script", nil), 0}
+	ch := make(chan RunOutput)
+	go RunOnHostBalancedByScriptName(dummyConn, task, ch)
+	<-ch
 }
