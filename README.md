@@ -48,6 +48,8 @@ Any host to which the user wishes to offload must have the following:
 * The __timeout__ command in your PATH.  This command is usually installed by default as part of the __coreutils__ package in Linux.
 
 The machine originating the offloading must have the following:
+* https://github.com/robfig/config
+* https://code.google.com/p/go.crypto/
 * A Unix-like environment (only tested on Mac OS X)
 * SSH client with client key authentication to the target host
 * Go (tested on 1.2)
