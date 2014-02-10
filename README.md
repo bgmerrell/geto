@@ -47,7 +47,7 @@ func main() {
 
 Any host to which the user wishes to offload must have the following:
 * A Unix-like environment (only tested on Linux)
-* SSH server with public key authentication with the machine originating the offloading.
+* SSH server allowing public-key authenticated logins by any machine doing offloading.  Password authentication is being worked on, but there is an [issue](https://github.com/bgmerrell/geto/issues/1)
 * The __timeout__ command in your PATH.  This command is usually installed by default as part of the __coreutils__ package in Linux.
 
 The machine originating the offloading must have the following:
