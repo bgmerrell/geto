@@ -9,9 +9,9 @@ package config
 
 import (
 	"errors"
-	"github.com/robfig/config"
 	"github.com/bgmerrell/geto/lib/host"
 	"github.com/bgmerrell/geto/lib/ssh"
+	"github.com/robfig/config"
 	"log"
 	"os"
 	"strconv"
