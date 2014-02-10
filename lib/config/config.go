@@ -9,7 +9,7 @@ package config
 
 import (
 	"errors"
-	"github.com/bgmerrell/config"
+	"github.com/robfig/config"
 	"github.com/bgmerrell/geto/lib/host"
 	"github.com/bgmerrell/geto/lib/ssh"
 	"log"
