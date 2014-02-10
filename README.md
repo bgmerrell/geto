@@ -4,13 +4,16 @@ geto
 (G)ood (e)nough (t)ask (o)ffloader is a framework for offloading work to hosts
 with minimal setup and dependencies.
 
-Basically, geto can be used to offload an arbitrary task to another host and
-retrieve results.
+Basically, geto can be used to offload an arbitrary task to another, target,
+host and retrieve results.
 
 You might want to use geto if you have a machine (or more) that needs to
-offload work to other machines.  It is likely that the offloading and result
-gathering to take on the order of seconds, so you might not want to use geto
-if that is a concern.
+offload work to other machines.  Geto code is only required on machines
+from which the work is offloaded; geto is not required (or in any way useful)
+on the target host machines.
+
+It is likely that the offloading and result gathering to take on the order of
+seconds, so you might not want to use geto if that is a concern.
 
 Here's a trivial example that runs a sleep command on a remote host:
 
@@ -48,6 +51,7 @@ Any host to which the user wishes to offload must have the following:
 * The __timeout__ command in your PATH.  This command is usually installed by default as part of the __coreutils__ package in Linux.
 
 The machine originating the offloading must have the following:
+* geto (notice that the target host does not require geto)
 * https://github.com/robfig/config
 * https://code.google.com/p/go.crypto/
 * A Unix-like environment (only tested on Mac OS X)
