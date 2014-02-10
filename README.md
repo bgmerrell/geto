@@ -39,7 +39,7 @@ func main() {
 	fmt.Printf("stdout: %s\n", taskOutput.Stdout)
 	fmt.Printf("stderr: %s\n", taskOutput.Stderr)
 	if taskOutput.Err != nil {
-		fmt.Printf("err: %s\n", taskOutput.Err)
+		fmt.Printf("err: %s\n", taskOutput.Err.Error())
 	}
 }
 ```
