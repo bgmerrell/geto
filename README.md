@@ -150,6 +150,6 @@ func RunOnHostBalancedByScriptName(conn remote.Remote, task Task, ch chan<- RunO
 
 ## TODO
 
-* Allow the remote copy operations to be done using key authentication (see [issue #1](https://github.com/bgmerrell/geto/issues/1))
+* Allow the remote copy operations to be done using password authentication (see [issue #1](https://github.com/bgmerrell/geto/issues/1))
 * Implement Python bridge allowing geto to be wielded from Python.  There is already a proof-of-concept code checked into the geto repo.  The code consists of a Go JSON rpc server and Python RPC client that calls it.
 * Various TODO-marked code.
