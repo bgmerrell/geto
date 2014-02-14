@@ -8,7 +8,7 @@ Basically, geto can be used to offload an arbitrary task to any target host
 and retrieve results.
 
 You might want to use geto if you have a machine (or more) that needs to
-offload work to other machines.  Geto code is only required on machines
+offload work to other machines.  Geto code is only required on a machine
 from which the work is offloaded; geto is not required (or in any way useful)
 on the target host machines.
 
