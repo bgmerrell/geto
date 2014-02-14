@@ -4,8 +4,8 @@ geto
 (G)ood (e)nough (t)ask (o)ffloader is a framework for offloading work to hosts
 with minimal setup and dependencies.
 
-Basically, geto can be used to offload an arbitrary task to another, target,
-host and retrieve results.
+Basically, geto can be used to offload an arbitrary task to any target host
+and retrieve results.
 
 You might want to use geto if you have a machine (or more) that needs to
 offload work to other machines.  Geto code is only required on machines
@@ -60,7 +60,7 @@ The machine originating the offloading must have the following:
 
 ## Terms
 
-* __Host__: Some machine setup with the first set of prerequisites above.
+* __Host__: Any machine that receives a task, i.e., any machine setup with the first set of prerequisites above.
 * __Task__: A unit of work to run on a host.  Task IDs are uniquely generated.
 * __Script__: A command to run on the host.  The same script may be run by multiple tasks, but a limit can easily be placed on the number of instances of a given script that can be executing concurrently on a given host.
 
