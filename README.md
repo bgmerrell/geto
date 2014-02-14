@@ -15,7 +15,7 @@ on the target host machines.
 It is likely that the offloading and result gathering to take on the order of
 seconds, so you might not want to use geto if that is a concern.
 
-Here's a trivial example that runs a sleep command on a remote host:
+Here's a trivial example that runs a sleep command on a target host:
 
 ```
 package main
