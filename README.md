@@ -12,7 +12,7 @@ offload work to other machines.  Geto code is only required on a machine
 from which the work is offloaded; geto is not required (or in any way useful)
 on the target host machines.
 
-It is likely that the offloading and result gathering to take on the order of
+It is likely that the offloading and result gathering will take on the order of
 seconds, so you might not want to use geto if that is a concern.
 
 Here's a trivial example that runs a sleep command on a target host:
@@ -62,7 +62,9 @@ The machine originating the offloading must have the following:
 
 * __Host__: Any machine that receives a task, i.e., any machine setup with the first set of prerequisites above.
 * __Task__: A unit of work to run on a host.  Task IDs are uniquely generated.
-* __Script__: A command to run on the host.  The same script may be run by multiple tasks, but a limit can easily be placed on the number of instances of a given script that can be executing concurrently on a given host.
+* __Script__: A geto object that contains a single script of any language.  Script objects can be given any name, and multiple script objects can share a common name.  The script name is used to limit and load balance the scripts on target hosts.
+
+A task contains a single script, and multiple tasks can contain scripts of the same name.
 
 For example, In the above code example, a simple bash script is used to compose a geto script (using the task.NewScriptWithCommands() method).  That geto script is then used to create a new geto task (using the task.New() method).  That task is then executed (using the task.RunOnHost() method) on the first host found in the parsed config file (i.e., conf.Hosts[0]).
 
